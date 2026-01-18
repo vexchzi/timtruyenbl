@@ -553,25 +553,23 @@ async function autoTagNovels(req, res) {
 
 /**
  * POST /api/admin/novels/retag-all
- * Body: { limit?: number, dryRun?: boolean }
+ * Body: { dryRun?: boolean }
  * 
  * Re-tag ALL novels (including those that already have tags)
  * Uses rawTags and description to regenerate tags
+ * Processes ALL novels in batches of 100
  */
 async function retagAllNovels(req, res) {
   try {
-    const { limit = 500, dryRun = false } = req.body || {};
-    const maxLimit = Math.min(parseInt(limit, 10) || 500, 2000);
+    const { dryRun = false } = req.body || {};
+    const batchSize = 100;
 
-    // Find ALL novels with rawTags
-    const novels = await Novel.find({
+    // Count total with rawTags
+    const totalWithRawTags = await Novel.countDocuments({
       rawTags: { $exists: true, $not: { $size: 0 } }
-    })
-    .limit(maxLimit)
-    .select('_id title rawTags description standardTags')
-    .lean();
+    });
 
-    if (novels.length === 0) {
+    if (totalWithRawTags === 0) {
       return res.json({
         success: true,
         data: {
@@ -583,65 +581,61 @@ async function retagAllNovels(req, res) {
       });
     }
 
-    // Count total with rawTags
-    const totalWithRawTags = await Novel.countDocuments({
-      rawTags: { $exists: true, $not: { $size: 0 } }
-    });
+    console.log(`[RetagAll] Starting re-tag of ${totalWithRawTags} novels...`);
 
+    let processed = 0;
     let updatedCount = 0;
     let unchangedCount = 0;
-    const changes = [];
+    let errorCount = 0;
+    const sampleChanges = [];
 
-    for (const novel of novels) {
-      try {
-        // Use normalizeTagsWithDescription to extract tags
-        const newTags = await normalizeTagsWithDescription(
-          novel.rawTags || [],
-          novel.description || ''
-        );
+    // Process ALL novels using cursor for memory efficiency
+    const cursor = Novel.find({
+      rawTags: { $exists: true, $not: { $size: 0 } }
+    })
+    .select('_id title rawTags description standardTags')
+    .cursor();
 
-        const oldTags = novel.standardTags || [];
-        const oldSet = new Set(oldTags);
-        const newSet = new Set(newTags);
+    let batch = [];
+    
+    for await (const novel of cursor) {
+      batch.push(novel);
+      
+      if (batch.length >= batchSize) {
+        // Process batch
+        const result = await processBatch(batch, dryRun, sampleChanges);
+        updatedCount += result.updated;
+        unchangedCount += result.unchanged;
+        errorCount += result.errors;
+        processed += batch.length;
         
-        // Check if tags changed
-        const added = newTags.filter(t => !oldSet.has(t));
-        const removed = oldTags.filter(t => !newSet.has(t));
-        
-        if (added.length > 0 || removed.length > 0) {
-          if (!dryRun) {
-            await Novel.findByIdAndUpdate(novel._id, {
-              $set: { standardTags: newTags, updatedAt: new Date() }
-            });
-          }
-          updatedCount++;
-          changes.push({
-            id: novel._id,
-            title: novel.title,
-            oldTags: oldTags.slice(0, 10),
-            newTags: newTags.slice(0, 10),
-            added: added.slice(0, 5),
-            removed: removed.slice(0, 5)
-          });
-        } else {
-          unchangedCount++;
-        }
-      } catch (err) {
-        console.error(`[RetagAll] Error processing novel ${novel._id}:`, err.message);
+        console.log(`[RetagAll] Processed ${processed}/${totalWithRawTags} (${updatedCount} updated)`);
+        batch = [];
       }
     }
+    
+    // Process remaining
+    if (batch.length > 0) {
+      const result = await processBatch(batch, dryRun, sampleChanges);
+      updatedCount += result.updated;
+      unchangedCount += result.unchanged;
+      errorCount += result.errors;
+      processed += batch.length;
+    }
+
+    console.log(`[RetagAll] Completed! Processed: ${processed}, Updated: ${updatedCount}, Unchanged: ${unchangedCount}, Errors: ${errorCount}`);
 
     return res.json({
       success: true,
       data: {
-        message: dryRun ? 'Dry run - không có thay đổi được lưu' : 'Đã re-tag truyện',
-        processed: novels.length,
+        message: dryRun ? 'Dry run - không có thay đổi được lưu' : 'Đã re-tag TẤT CẢ truyện',
+        processed,
         updated: updatedCount,
         unchanged: unchangedCount,
-        remaining: totalWithRawTags - novels.length,
+        errors: errorCount,
         totalWithRawTags,
         dryRun,
-        sampleChanges: changes.slice(0, 20)
+        sampleChanges: sampleChanges.slice(0, 30)
       }
     });
   } catch (error) {
@@ -652,6 +646,57 @@ async function retagAllNovels(req, res) {
       message: error.message
     });
   }
+}
+
+// Helper function to process a batch of novels for retagging
+async function processBatch(novels, dryRun, sampleChanges) {
+  let updated = 0;
+  let unchanged = 0;
+  let errors = 0;
+
+  for (const novel of novels) {
+    try {
+      const newTags = await normalizeTagsWithDescription(
+        novel.rawTags || [],
+        novel.description || ''
+      );
+
+      const oldTags = novel.standardTags || [];
+      const oldSet = new Set(oldTags);
+      const newSet = new Set(newTags);
+      
+      const added = newTags.filter(t => !oldSet.has(t));
+      const removed = oldTags.filter(t => !newSet.has(t));
+      
+      if (added.length > 0 || removed.length > 0) {
+        if (!dryRun) {
+          await Novel.findByIdAndUpdate(novel._id, {
+            $set: { standardTags: newTags, updatedAt: new Date() }
+          });
+        }
+        updated++;
+        
+        // Keep sample changes (limit to 30)
+        if (sampleChanges.length < 30) {
+          sampleChanges.push({
+            id: novel._id,
+            title: novel.title,
+            oldTags: oldTags.slice(0, 8),
+            newTags: newTags.slice(0, 8),
+            added: added.slice(0, 5),
+            removed: removed.slice(0, 5)
+          });
+        }
+      } else {
+        unchanged++;
+      }
+    } catch (err) {
+      console.error(`[RetagAll] Error processing novel ${novel._id}:`, err.message);
+      errors++;
+    }
+  }
+
+  return { updated, unchanged, errors };
 }
 
 /**

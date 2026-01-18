@@ -2786,25 +2786,25 @@
         return;
       }
       
-      const limit = document.getElementById('autoTagLimit').value;
-      const confirmMsg = `Bạn có chắc muốn re-tag ${limit} truyện?\n\nThao tác này sẽ ghi đè tags hiện tại!`;
+      const totalNovels = document.getElementById('statTotal')?.textContent || '?';
+      const confirmMsg = `Bạn có chắc muốn re-tag TẤT CẢ ${totalNovels} truyện?\n\nQuá trình này sẽ mất vài phút.\nTags hiện tại sẽ được ghi đè!`;
       if (!confirm(confirmMsg)) return;
       
       const btn = document.getElementById('btnRetagAll');
       btn.disabled = true;
       btn.classList.add('running');
-      btn.innerHTML = 'Đang re-tag...';
+      btn.innerHTML = 'Đang re-tag TẤT CẢ...';
       
       try {
         const data = await api('/admin/novels/retag-all', {
           method: 'POST',
-          body: JSON.stringify({ limit: parseInt(limit), dryRun: false })
+          body: JSON.stringify({ dryRun: false })
         });
         
         if (data.success) {
-          const { processed, updated, unchanged, remaining, totalWithRawTags, sampleChanges } = data.data;
+          const { processed, updated, unchanged, errors, totalWithRawTags, sampleChanges } = data.data;
           
-          showToast(`Đã re-tag ${updated}/${processed} truyện. Còn lại: ${remaining}/${totalWithRawTags}`);
+          showToast(`Hoàn tất! Đã re-tag ${updated}/${processed} truyện (${errors} lỗi)`);
           
           // Show results in console
           console.log('Re-tag results:', data.data);
