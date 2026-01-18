@@ -2,7 +2,11 @@
  * API Service - Gọi Backend APIs
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// Use Render API directly for production, local proxy for development
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (window.location.hostname.includes('vercel') 
+    ? 'https://timtruyenbl.onrender.com/api' 
+    : '/api');
 
 /**
  * Fetch wrapper với error handling
