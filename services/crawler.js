@@ -125,22 +125,48 @@ async function crawlWattpad(url) {
     // Wattpad thường đặt title trong nhiều vị trí, thử từng cái
     let title = '';
     
-    // Cách 1: Meta tag og:title
+    // Cách 1: Meta tag og:title (đáng tin cậy nhất)
     title = $('meta[property="og:title"]').attr('content');
     
     // Cách 2: Title tag
-    if (!title) {
-      title = $('title').text().split('-')[0].trim();
+    if (!title || title === '[EDIT]') {
+      const pageTitle = $('title').text();
+      if (pageTitle && !pageTitle.includes('[EDIT]')) {
+        title = pageTitle.split('-')[0].trim();
+      }
     }
     
-    // Cách 3: H1 trong story header
-    if (!title) {
-      title = $('.story-info__title').text().trim() || 
-              $('h1').first().text().trim();
+    // Cách 3: Story info title (specific selector)
+    if (!title || title === '[EDIT]') {
+      title = $('.story-info__title').text().trim();
     }
     
-    // Clean up title - loại bỏ "- Wattpad" suffix
-    title = title.replace(/\s*-\s*Wattpad.*$/i, '').trim();
+    // Cách 4: JSON-LD schema
+    if (!title || title === '[EDIT]') {
+      const scriptTags = $('script[type="application/ld+json"]');
+      scriptTags.each((i, el) => {
+        try {
+          const jsonData = JSON.parse($(el).html());
+          if (jsonData.name && jsonData.name !== '[EDIT]') {
+            title = jsonData.name;
+          }
+        } catch (e) {}
+      });
+    }
+    
+    // Cách 5: H1 nhưng tránh button text
+    if (!title || title === '[EDIT]') {
+      $('h1').each((i, el) => {
+        const text = $(el).text().trim();
+        if (text && text !== '[EDIT]' && text.length > 2 && !text.includes('Edit')) {
+          title = text;
+          return false; // break
+        }
+      });
+    }
+    
+    // Clean up title - loại bỏ "- Wattpad" suffix và [EDIT]
+    title = title ? title.replace(/\s*-\s*Wattpad.*$/i, '').replace(/\[EDIT\]/gi, '').trim() : '';
     
     // ============== PARSE AUTHOR ==============
     let author = '';
