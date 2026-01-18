@@ -1021,37 +1021,11 @@
     // API
     const API = '/api';
     
-    // Get site token from URL or localStorage
-    function getSiteToken() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlToken = urlParams.get('token');
-      if (urlToken) {
-        localStorage.setItem('siteToken', urlToken);
-        return urlToken;
-      }
-      return localStorage.getItem('siteToken');
-    }
-    
     async function api(endpoint, options = {}) {
       const headers = { 'Content-Type': 'application/json' };
       if (adminToken) headers['X-Admin-Token'] = adminToken;
       
-      // Add site token for site-wide auth
-      const siteToken = getSiteToken();
-      if (siteToken) headers['X-Site-Token'] = siteToken;
-      
       const res = await fetch(API + endpoint, { ...options, headers });
-      
-      // Handle auth redirect
-      if (res.status === 401) {
-        const data = await res.json();
-        if (data.message && data.message.includes('Site token')) {
-          localStorage.removeItem('siteToken');
-          window.location.href = '/login';
-          return { success: false };
-        }
-      }
-      
       return res.json();
     }
     

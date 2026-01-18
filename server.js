@@ -22,7 +22,6 @@ const { warmUpCache } = require('./utils/tagNormalizer');
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/novel_recommender';
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const SITE_TOKEN = process.env.SITE_TOKEN || process.env.ADMIN_TOKEN; // Token để vào web
 
 // ============== EXPRESS APP ==============
 
@@ -59,66 +58,6 @@ if (NODE_ENV === 'development') {
 // ============== STATIC FILES ==============
 
 const path = require('path');
-
-// ============== SITE AUTH ==============
-
-// Auth verification endpoint (public)
-app.post('/api/auth/verify', (req, res) => {
-  const { token } = req.body;
-  if (token && token === SITE_TOKEN) {
-    res.json({ success: true, message: 'Token valid' });
-  } else {
-    res.status(401).json({ success: false, message: 'Invalid token' });
-  }
-});
-
-// Login page (public) 
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/login.html'));
-});
-
-// Site-wide auth middleware
-const siteAuth = (req, res, next) => {
-  // Skip auth for login page and auth endpoint
-  if (req.path === '/login' || 
-      req.path === '/login.html' || 
-      req.path === '/api/auth/verify' ||
-      req.path.startsWith('/assets/') ||
-      req.path.endsWith('.css') ||
-      req.path.endsWith('.js') ||
-      req.path.endsWith('.ico') ||
-      req.path.endsWith('.svg') ||
-      req.path.endsWith('.png') ||
-      req.path.endsWith('.jpg')) {
-    return next();
-  }
-  
-  // Check token from header or query
-  const token = req.headers['x-site-token'] || req.query.token;
-  
-  if (!SITE_TOKEN) {
-    // No token configured = site is open
-    return next();
-  }
-  
-  if (token === SITE_TOKEN) {
-    return next();
-  }
-  
-  // For HTML pages, redirect to login
-  if (req.accepts('html') && !req.path.startsWith('/api/')) {
-    return res.redirect('/login');
-  }
-  
-  // For API requests, return 401
-  res.status(401).json({ 
-    success: false, 
-    error: 'Unauthorized',
-    message: 'Site token required. Add X-Site-Token header or ?token= query param'
-  });
-};
-
-app.use(siteAuth);
 
 // Serve admin page and other static files
 app.use(express.static(path.join(__dirname, 'public')));
