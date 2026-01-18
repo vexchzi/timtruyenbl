@@ -5,14 +5,31 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 /**
+ * Get site token from URL or localStorage
+ */
+function getSiteToken() {
+  // Check URL params first
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlToken = urlParams.get('token');
+  if (urlToken) {
+    localStorage.setItem('siteToken', urlToken);
+    return urlToken;
+  }
+  // Fall back to localStorage
+  return localStorage.getItem('siteToken');
+}
+
+/**
  * Fetch wrapper với error handling
  */
 async function fetchAPI(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  const siteToken = getSiteToken();
   
   const config = {
     headers: {
       'Content-Type': 'application/json',
+      ...(siteToken && { 'X-Site-Token': siteToken }),
       ...options.headers,
     },
     ...options,
@@ -20,6 +37,14 @@ async function fetchAPI(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, config);
+    
+    // Handle auth redirect
+    if (response.status === 401) {
+      localStorage.removeItem('siteToken');
+      window.location.href = '/login';
+      throw new Error('Unauthorized');
+    }
+    
     const data = await response.json();
 
     if (!response.ok) {

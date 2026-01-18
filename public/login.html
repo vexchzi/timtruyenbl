@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - BL Novel</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #121218;
+      color: #e0e0e8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-container {
+      background: #1a1a24;
+      border: 1px solid #2a2a38;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .logo {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      background: #252530;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo svg {
+      width: 32px;
+      height: 32px;
+      color: #e8a0b8;
+    }
+    h1 {
+      color: #e8a0b8;
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    p {
+      color: #909098;
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #2a2a38;
+      border-radius: 10px;
+      background: #121218;
+      color: #e0e0e8;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      border-color: #60c0b0;
+    }
+    input::placeholder {
+      color: #606068;
+    }
+    button {
+      width: 100%;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #c06080 0%, #a05068 100%);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(192, 96, 128, 0.3);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .error {
+      color: #e06060;
+      font-size: 0.85rem;
+      margin-top: 15px;
+      display: none;
+    }
+    .error.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
+    </div>
+    <h1>BL Novel</h1>
+    <p>Nhap token de truy cap</p>
+    
+    <form id="loginForm">
+      <div class="form-group">
+        <input 
+          type="password" 
+          id="tokenInput" 
+          placeholder="Nhap token..."
+          autocomplete="off"
+          autofocus
+        >
+      </div>
+      <button type="submit" id="submitBtn">Xac nhan</button>
+      <div class="error" id="errorMsg">Token khong hop le</div>
+    </form>
+  </div>
+
+  <script>
+    // Check if already authenticated
+    const savedToken = localStorage.getItem('siteToken');
+    if (savedToken) {
+      verifyAndRedirect(savedToken);
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const token = document.getElementById('tokenInput').value.trim();
+      const btn = document.getElementById('submitBtn');
+      const error = document.getElementById('errorMsg');
+      
+      if (!token) return;
+      
+      btn.disabled = true;
+      btn.textContent = 'Dang kiem tra...';
+      error.classList.remove('show');
+      
+      try {
+        const res = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          localStorage.setItem('siteToken', token);
+          // Redirect to home with token
+          window.location.href = '/?token=' + encodeURIComponent(token);
+        } else {
+          error.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Xac nhan';
+        }
+      } catch (err) {
+        error.textContent = 'Loi ket noi. Vui long thu lai.';
+        error.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Xac nhan';
+      }
+    });
+    
+    async function verifyAndRedirect(token) {
+      try {
+        const res = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          window.location.href = '/?token=' + encodeURIComponent(token);
+        } else {
+          localStorage.removeItem('siteToken');
+        }
+      } catch (err) {
+        // Silent fail
+      }
+    }
+  </script>
+</body>
+</html>
