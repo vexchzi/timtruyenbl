@@ -552,6 +552,109 @@ async function autoTagNovels(req, res) {
 }
 
 /**
+ * POST /api/admin/novels/retag-all
+ * Body: { limit?: number, dryRun?: boolean }
+ * 
+ * Re-tag ALL novels (including those that already have tags)
+ * Uses rawTags and description to regenerate tags
+ */
+async function retagAllNovels(req, res) {
+  try {
+    const { limit = 500, dryRun = false } = req.body || {};
+    const maxLimit = Math.min(parseInt(limit, 10) || 500, 2000);
+
+    // Find ALL novels with rawTags
+    const novels = await Novel.find({
+      rawTags: { $exists: true, $not: { $size: 0 } }
+    })
+    .limit(maxLimit)
+    .select('_id title rawTags description standardTags')
+    .lean();
+
+    if (novels.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          message: 'Không có truyện nào có rawTags để xử lý.',
+          processed: 0,
+          updated: 0,
+          unchanged: 0
+        }
+      });
+    }
+
+    // Count total with rawTags
+    const totalWithRawTags = await Novel.countDocuments({
+      rawTags: { $exists: true, $not: { $size: 0 } }
+    });
+
+    let updatedCount = 0;
+    let unchangedCount = 0;
+    const changes = [];
+
+    for (const novel of novels) {
+      try {
+        // Use normalizeTagsWithDescription to extract tags
+        const newTags = await normalizeTagsWithDescription(
+          novel.rawTags || [],
+          novel.description || ''
+        );
+
+        const oldTags = novel.standardTags || [];
+        const oldSet = new Set(oldTags);
+        const newSet = new Set(newTags);
+        
+        // Check if tags changed
+        const added = newTags.filter(t => !oldSet.has(t));
+        const removed = oldTags.filter(t => !newSet.has(t));
+        
+        if (added.length > 0 || removed.length > 0) {
+          if (!dryRun) {
+            await Novel.findByIdAndUpdate(novel._id, {
+              $set: { standardTags: newTags, updatedAt: new Date() }
+            });
+          }
+          updatedCount++;
+          changes.push({
+            id: novel._id,
+            title: novel.title,
+            oldTags: oldTags.slice(0, 10),
+            newTags: newTags.slice(0, 10),
+            added: added.slice(0, 5),
+            removed: removed.slice(0, 5)
+          });
+        } else {
+          unchangedCount++;
+        }
+      } catch (err) {
+        console.error(`[RetagAll] Error processing novel ${novel._id}:`, err.message);
+      }
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        message: dryRun ? 'Dry run - không có thay đổi được lưu' : 'Đã re-tag truyện',
+        processed: novels.length,
+        updated: updatedCount,
+        unchanged: unchangedCount,
+        remaining: totalWithRawTags - novels.length,
+        totalWithRawTags,
+        dryRun,
+        sampleChanges: changes.slice(0, 20)
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] retagAllNovels error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+}
+
+/**
  * GET /api/admin/novels/stats
  * Get stats about novels without tags
  */
@@ -825,6 +928,7 @@ module.exports = {
   updateTag,
   deleteTag,
   autoTagNovels,
+  retagAllNovels,
   getNovelStats,
   recrawlNovel,
   searchByKeyword

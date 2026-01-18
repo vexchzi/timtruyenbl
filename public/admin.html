@@ -844,12 +844,17 @@
             <option value="100" selected>100 truyện</option>
             <option value="200">200 truyện</option>
             <option value="500">500 truyện</option>
+            <option value="1000">1000 truyện</option>
+            <option value="2000">2000 truyện</option>
           </select>
           <button class="btn-dry-run" onclick="runAutoTag(true)" title="Xem trước kết quả mà không lưu">
             Dry Run
           </button>
           <button class="btn-auto-tag" id="btnAutoTag" onclick="runAutoTag(false)">
             Auto Tag
+          </button>
+          <button class="btn-auto-tag" id="btnRetagAll" onclick="runRetagAll()" style="background:linear-gradient(135deg, #e0a050 0%, #c08030 100%);" title="Re-tag TẤT CẢ truyện (kể cả đã có tag)">
+            Re-tag All
           </button>
         </div>
       </div>
@@ -2771,6 +2776,59 @@
         btn.disabled = false;
         btn.classList.remove('running');
         btn.innerHTML = 'Auto Tag';
+      }
+    }
+    
+    // Re-tag ALL novels (including those with existing tags)
+    async function runRetagAll() {
+      if (!adminToken) {
+        showToast('Cần nhập Admin Token trước!', true);
+        return;
+      }
+      
+      const limit = document.getElementById('autoTagLimit').value;
+      const confirmMsg = `Bạn có chắc muốn re-tag ${limit} truyện?\n\nThao tác này sẽ ghi đè tags hiện tại!`;
+      if (!confirm(confirmMsg)) return;
+      
+      const btn = document.getElementById('btnRetagAll');
+      btn.disabled = true;
+      btn.classList.add('running');
+      btn.innerHTML = 'Đang re-tag...';
+      
+      try {
+        const data = await api('/admin/novels/retag-all', {
+          method: 'POST',
+          body: JSON.stringify({ limit: parseInt(limit), dryRun: false })
+        });
+        
+        if (data.success) {
+          const { processed, updated, unchanged, remaining, totalWithRawTags, sampleChanges } = data.data;
+          
+          showToast(`Đã re-tag ${updated}/${processed} truyện. Còn lại: ${remaining}/${totalWithRawTags}`);
+          
+          // Show results in console
+          console.log('Re-tag results:', data.data);
+          if (sampleChanges && sampleChanges.length > 0) {
+            console.log('Sample changes:');
+            console.table(sampleChanges.slice(0, 10).map(c => ({
+              title: c.title?.substring(0, 35),
+              added: (c.added || []).join(', '),
+              removed: (c.removed || []).join(', ')
+            })));
+          }
+          
+          // Refresh stats and novel list
+          await loadNovelStats();
+          await loadNovels();
+        } else {
+          showToast(data.message || data.error || 'Lỗi', true);
+        }
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('running');
+        btn.innerHTML = 'Re-tag All';
       }
     }
     

@@ -21,6 +21,9 @@ router.get('/novels/search-keyword', adminController.searchByKeyword);
 // Auto-tag novels without tags
 router.post('/novels/auto-tag', adminController.autoTagNovels);
 
+// Re-tag ALL novels (including those with existing tags)
+router.post('/novels/retag-all', adminController.retagAllNovels);
+
 // Update tags for a novel
 router.put('/novels/:id/tags', adminController.updateNovelTags);
 
