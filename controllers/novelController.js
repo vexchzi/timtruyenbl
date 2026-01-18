@@ -12,6 +12,7 @@
 const { Novel, TagDictionary } = require('../models');
 const { crawlWattpad, normalizeWattpadUrl } = require('../services/crawler');
 const { crawlSinglePost: crawlWordpress } = require('../services/wordpressCrawler');
+const { crawlNovelDetail: crawlAtlantis, normalizeAtlantisUrl } = require('../services/atlantisCrawler');
 const { normalizeTags, normalizeTagsDetailed } = require('../utils/tagNormalizer');
 const { findSimilarNovels, getPopularTags, getStats } = require('../services/recommender');
 
@@ -47,18 +48,28 @@ async function recommend(req, res) {
     // Detect source type
     const isWattpad = url.includes('wattpad.com');
     const isWordpress = url.includes('wordpress.com') || url.includes('.wordpress.');
+    const isAtlantis = url.includes('atlantisviendong.com');
 
     // Validate URL format
-    if (!isWattpad && !isWordpress) {
+    if (!isWattpad && !isWordpress && !isAtlantis) {
       return res.status(400).json({
         success: false,
         error: 'Invalid URL',
-        message: 'Chỉ hỗ trợ URL từ Wattpad hoặc WordPress'
+        message: 'Chỉ hỗ trợ URL từ Wattpad, WordPress hoặc Atlantis Viễn Đông'
       });
     }
 
-    const normalizedUrl = isWattpad ? normalizeWattpadUrl(url) : url.split('?')[0].trim();
-    console.log(`[API] Recommend request for ${isWattpad ? 'Wattpad' : 'WordPress'}: ${normalizedUrl}`);
+    let normalizedUrl;
+    if (isWattpad) {
+      normalizedUrl = normalizeWattpadUrl(url);
+    } else if (isAtlantis) {
+      normalizedUrl = normalizeAtlantisUrl(url);
+    } else {
+      normalizedUrl = url.split('?')[0].trim();
+    }
+    
+    const sourceName = isWattpad ? 'Wattpad' : (isAtlantis ? 'Atlantis' : 'WordPress');
+    console.log(`[API] Recommend request for ${sourceName}: ${normalizedUrl}`);
 
     let sourceNovel = null;
     let isNewNovel = false;
@@ -72,11 +83,13 @@ async function recommend(req, res) {
       console.log(`[API] Found in DB: "${sourceNovel.title}"`);
     } else {
       // Không có trong DB -> Crawl mới
-      console.log(`[API] Not in DB, crawling from ${isWattpad ? 'Wattpad' : 'WordPress'}...`);
+      console.log(`[API] Not in DB, crawling from ${sourceName}...`);
       
       let crawledData;
       if (isWattpad) {
         crawledData = await crawlWattpad(normalizedUrl);
+      } else if (isAtlantis) {
+        crawledData = await crawlAtlantis(normalizedUrl);
       } else {
         crawledData = await crawlWordpress(normalizedUrl);
       }

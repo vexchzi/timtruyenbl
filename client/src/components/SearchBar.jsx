@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 /**
- * SearchBar - Hỗ trợ Wattpad & WordPress
+ * SearchBar - Hỗ trợ Wattpad, WordPress & Atlantis Viễn Đông
  */
 export default function SearchBar({ onSearch, isLoading }) {
   const [url, setUrl] = useState('');
@@ -12,9 +12,10 @@ export default function SearchBar({ onSearch, isLoading }) {
     
     const isWattpad = value.includes('wattpad.com');
     const isWordpress = value.includes('wordpress.com') || value.includes('.wordpress.');
+    const isAtlantis = value.includes('atlantisviendong.com');
     
-    if (!isWattpad && !isWordpress) {
-      return 'Chỉ hỗ trợ link từ Wattpad hoặc WordPress';
+    if (!isWattpad && !isWordpress && !isAtlantis) {
+      return 'Chỉ hỗ trợ link từ Wattpad, WordPress hoặc Atlantis';
     }
     
     if (isWattpad && !value.includes('/story/')) {
@@ -66,7 +67,7 @@ export default function SearchBar({ onSearch, isLoading }) {
             type="text"
             value={url}
             onChange={handleChange}
-            placeholder="Paste link truyện Wattpad hoặc WordPress..."
+            placeholder="Paste link truyện từ Wattpad, WordPress, Atlantis..."
             disabled={isLoading}
             className="flex-1 py-3.5 bg-transparent text-stone-200 placeholder-stone-500 focus:outline-none text-sm disabled:opacity-50"
           />

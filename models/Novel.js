@@ -34,10 +34,10 @@ const NovelSchema = new mongoose.Schema({
     }
   },
 
-  // Nguồn gốc: wattpad, wordpress, navyteam, gocnho, other
+  // Nguồn gốc: wattpad, wordpress, navyteam, gocnho, atlantis, other
   source: {
     type: String,
-    enum: ['wattpad', 'wordpress', 'navyteam', 'gocnho', 'other'],
+    enum: ['wattpad', 'wordpress', 'navyteam', 'gocnho', 'atlantis', 'other'],
     default: 'other'
   },
 
