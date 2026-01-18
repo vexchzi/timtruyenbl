@@ -101,7 +101,7 @@ export default function App() {
             <p className="text-stone-400 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
               Khám phá những câu chuyện phù hợp với bạn
               <br className="hidden sm:block" />
-              <span className="text-stone-500">Chỉ cần một đường link Wattpad</span>
+              <span className="text-stone-500">Hỗ trợ Wattpad, WordPress, Atlantis</span>
             </p>
 
             <SearchBar onSearch={handleSearch} isLoading={isLoading} />
