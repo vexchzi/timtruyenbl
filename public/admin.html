@@ -1175,19 +1175,22 @@
     // Load data - use admin API to get all tags from TagDictionary
     async function loadTags() {
       const data = await api('/admin/tags');
-      if (data.success && data.data) {
+      if (data.success && data.data?.tags) {
         // Build allTags structure from admin tags
         allTags = {};
         const tagFilter = document.getElementById('tagFilter');
         tagFilter.innerHTML = '<option value="">Tất cả tags</option>';
         
-        for (const tag of data.data) {
+        for (const tag of data.data.tags) {
           const cat = tag.category || 'other';
+          const tagName = tag.standardTag || tag.tag;
+          if (!tagName) continue;
+          
           if (!allTags[cat]) {
             allTags[cat] = { name: cat, tags: [] };
           }
-          allTags[cat].tags.push({ tag: tag.tag, name: tag.tag });
-          tagFilter.innerHTML += `<option value="${tag.tag}">${tag.tag}</option>`;
+          allTags[cat].tags.push({ tag: tagName, name: tagName });
+          tagFilter.innerHTML += `<option value="${tagName}">${tagName}</option>`;
         }
       }
     }
