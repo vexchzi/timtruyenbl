@@ -77,11 +77,6 @@ export default function App() {
         stats={stats}
       />
 
-      {/* Subtle decorative background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-stone-800/30 rounded-full blur-3xl animate-gentle-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-stone-700/20 rounded-full blur-3xl animate-gentle-pulse animation-delay-150"></div>
-      </div>
 
       <div className="relative z-10">
         {/* Header */}
