@@ -737,15 +737,75 @@
     .btn-recrawl:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-recrawl.running { animation: pulse 1s infinite; }
     .missing-data { color: #e8a0b8; font-style: italic; }
+    /* Login Overlay */
+    .login-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #121218;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .login-overlay.hidden { display: none; }
+    .login-box {
+      background: #1a1a24;
+      border: 1px solid #2a2a38;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    .login-box h2 { color: #e8a0b8; margin-bottom: 10px; }
+    .login-box p { color: #909098; margin-bottom: 25px; font-size: 0.9rem; }
+    .login-box input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #2a2a38;
+      border-radius: 8px;
+      background: #121218;
+      color: #e0e0e8;
+      font-size: 1rem;
+      margin-bottom: 15px;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: #c06080;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .login-box button:hover { background: #d07090; }
+    .login-box .error { color: #e06060; font-size: 0.85rem; margin-top: 10px; display: none; }
+    .login-box .error.show { display: block; }
+    
+    /* Main content hidden by default */
+    .main-content { display: none; }
+    .main-content.visible { display: block; }
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- Login Overlay -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+      <h2>Admin Panel</h2>
+      <p>Nhap Admin Token de truy cap</p>
+      <input type="password" id="loginTokenInput" placeholder="Admin Token..." onkeypress="if(event.key==='Enter') verifyAndLogin()">
+      <button onclick="verifyAndLogin()">Dang nhap</button>
+      <div class="error" id="loginError">Token khong hop le</div>
+    </div>
+  </div>
+
+  <div class="container main-content" id="mainContent">
     <div class="header">
       <h1>Admin Panel</h1>
       <div class="auth-section">
-        <input type="password" id="tokenInput" placeholder="Admin Token...">
-        <button onclick="setToken()">Xác nhận</button>
+        <button onclick="logout()" style="background:#404050">Dang xuat</button>
         <span class="auth-status" id="authStatus"></span>
       </div>
     </div>
@@ -1007,6 +1067,7 @@
   <script>
     // State
     let adminToken = localStorage.getItem('adminToken') || '';
+    let isAuthenticated = false;
     let novels = [];
     let allTags = {};
     let allSources = [];
@@ -1029,14 +1090,86 @@
       return res.json();
     }
     
-    // Auth
-    function setToken() {
-      adminToken = document.getElementById('tokenInput').value.trim();
-      localStorage.setItem('adminToken', adminToken);
-      document.getElementById('authStatus').textContent = adminToken ? 'Token đã lưu' : '';
-      document.getElementById('tokenInput').value = '';
-      // Refresh stats after setting token
-      loadNovelStats();
+    // Auth - Login
+    async function verifyAndLogin() {
+      const token = document.getElementById('loginTokenInput').value.trim();
+      const errorEl = document.getElementById('loginError');
+      
+      if (!token) {
+        errorEl.textContent = 'Vui long nhap token';
+        errorEl.classList.add('show');
+        return;
+      }
+      
+      errorEl.classList.remove('show');
+      
+      try {
+        // Test token by calling a protected endpoint
+        const res = await fetch(API + '/admin/novels?limit=1', {
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Token': token 
+          }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          // Token valid
+          adminToken = token;
+          localStorage.setItem('adminToken', token);
+          isAuthenticated = true;
+          showMainContent();
+          loadInitialData();
+        } else {
+          errorEl.textContent = data.error || 'Token khong hop le';
+          errorEl.classList.add('show');
+        }
+      } catch (err) {
+        errorEl.textContent = 'Loi ket noi server';
+        errorEl.classList.add('show');
+      }
+    }
+    
+    function logout() {
+      adminToken = '';
+      isAuthenticated = false;
+      localStorage.removeItem('adminToken');
+      hideMainContent();
+    }
+    
+    function showMainContent() {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.getElementById('mainContent').classList.add('visible');
+    }
+    
+    function hideMainContent() {
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      document.getElementById('mainContent').classList.remove('visible');
+      document.getElementById('loginTokenInput').value = '';
+    }
+    
+    // Check saved token on load
+    async function checkSavedToken() {
+      if (adminToken) {
+        try {
+          const res = await fetch(API + '/admin/novels?limit=1', {
+            headers: { 
+              'Content-Type': 'application/json',
+              'X-Admin-Token': adminToken 
+            }
+          });
+          const data = await res.json();
+          
+          if (data.success) {
+            isAuthenticated = true;
+            showMainContent();
+            loadInitialData();
+            return;
+          }
+        } catch (err) {}
+      }
+      // Token invalid or not saved
+      hideMainContent();
     }
     
     // Load data
@@ -2640,15 +2773,18 @@
       }
     }
     
-    // Init
-    document.addEventListener('DOMContentLoaded', async () => {
-      if (adminToken) {
-        document.getElementById('authStatus').textContent = 'Token đã lưu';
-      }
+    // Load initial data after authentication
+    async function loadInitialData() {
       await loadTags();
       await loadNovels();
       await loadNovelStats();
       loadAuditTagOptions();
+    }
+    
+    // Init
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check saved token and authenticate
+      await checkSavedToken();
       
       // Close modal on Escape key
       document.addEventListener('keydown', (e) => {
