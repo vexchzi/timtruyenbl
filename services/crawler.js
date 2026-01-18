@@ -125,48 +125,65 @@ async function crawlWattpad(url) {
     // Wattpad thường đặt title trong nhiều vị trí, thử từng cái
     let title = '';
     
-    // Cách 1: Meta tag og:title (đáng tin cậy nhất)
-    title = $('meta[property="og:title"]').attr('content');
+    // Helper: Kiểm tra title có hợp lệ không (không chỉ là "[EDIT]" đơn lẻ)
+    const isValidTitle = (t) => {
+      if (!t) return false;
+      const cleaned = t.trim();
+      // Chỉ reject nếu title ĐÚNG BẰNG "[EDIT]" hoặc quá ngắn
+      if (cleaned === '[EDIT]' || cleaned === 'EDIT' || cleaned.length < 5) return false;
+      return true;
+    };
     
-    // Cách 2: Title tag
-    if (!title || title === '[EDIT]') {
-      const pageTitle = $('title').text();
-      if (pageTitle && !pageTitle.includes('[EDIT]')) {
-        title = pageTitle.split('-')[0].trim();
+    // Cách 1: Title tag (thường có full title)
+    const pageTitle = $('title').text();
+    if (pageTitle) {
+      // Title tag thường có format: "[EDIT - HOÀN] Tên truyện - Author - Wattpad"
+      title = pageTitle.replace(/\s*-\s*Wattpad.*$/i, '').trim();
+    }
+    
+    // Cách 2: Meta tag og:title
+    if (!isValidTitle(title)) {
+      const ogTitle = $('meta[property="og:title"]').attr('content');
+      if (isValidTitle(ogTitle)) {
+        title = ogTitle;
       }
     }
     
     // Cách 3: Story info title (specific selector)
-    if (!title || title === '[EDIT]') {
-      title = $('.story-info__title').text().trim();
+    if (!isValidTitle(title)) {
+      const storyTitle = $('.story-info__title').text().trim();
+      if (isValidTitle(storyTitle)) {
+        title = storyTitle;
+      }
     }
     
     // Cách 4: JSON-LD schema
-    if (!title || title === '[EDIT]') {
+    if (!isValidTitle(title)) {
       const scriptTags = $('script[type="application/ld+json"]');
       scriptTags.each((i, el) => {
         try {
           const jsonData = JSON.parse($(el).html());
-          if (jsonData.name && jsonData.name !== '[EDIT]') {
+          if (jsonData.name && isValidTitle(jsonData.name)) {
             title = jsonData.name;
+            return false; // break
           }
         } catch (e) {}
       });
     }
     
-    // Cách 5: H1 nhưng tránh button text
-    if (!title || title === '[EDIT]') {
+    // Cách 5: H1 với độ dài hợp lý
+    if (!isValidTitle(title)) {
       $('h1').each((i, el) => {
         const text = $(el).text().trim();
-        if (text && text !== '[EDIT]' && text.length > 2 && !text.includes('Edit')) {
+        if (isValidTitle(text)) {
           title = text;
           return false; // break
         }
       });
     }
     
-    // Clean up title - loại bỏ "- Wattpad" suffix và [EDIT]
-    title = title ? title.replace(/\s*-\s*Wattpad.*$/i, '').replace(/\[EDIT\]/gi, '').trim() : '';
+    // Clean up title - chỉ loại bỏ "- Wattpad" suffix, KHÔNG xóa [EDIT...] vì đó có thể là tên thật
+    title = title ? title.replace(/\s*-\s*Wattpad.*$/i, '').trim() : '';
     
     // ============== PARSE AUTHOR ==============
     let author = '';
