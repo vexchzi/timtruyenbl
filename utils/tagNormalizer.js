@@ -13,13 +13,10 @@ const TagDictionary = require('../models/TagDictionary');
 
 /**
  * BLACKLIST TAGS - Các tags sẽ bị bỏ qua
- * - Tags liên quan đến fanfic, format không cần thiết
  * - Tags chung chung của Wattpad
+ * - Format tags không cần thiết
  */
 const BLACKLIST_TAGS = [
-  // Fanfic related
-  'fic', 'fanfic', 'fanfiction', 'shortfic', 'fiction', 'fics',
-  'fanfics', 'oneshot', 'twoshot', 'drabble', 'ficlet',
   // Wattpad generic tags
   'wattpad', 'wattpadstories', 'stories', 'story', 'reading',
   'ebooks', 'books', 'book', 'newadult', 'teenfiction',
@@ -516,14 +513,94 @@ function extractTagsFromDescription(description) {
  * @returns {Promise<string[]>} - Mảng standardTags
  */
 async function normalizeTagsWithDescription(rawTags = [], description = '') {
-  // Extract tags từ description
+  // Extract tags từ description (theo format "Thể loại: xxx")
   const descriptionTags = extractTagsFromDescription(description);
   
   // Merge rawTags và descriptionTags
   const allTags = [...(rawTags || []), ...descriptionTags];
   
   // Normalize tất cả
-  return normalizeTags(allTags);
+  const normalizedTags = await normalizeTags(allTags);
+  
+  // Nếu vẫn không có tags, thử scan description trực tiếp
+  if (normalizedTags.length === 0 && description && description.length > 20) {
+    const scannedTags = await scanDescriptionForTags(description);
+    if (scannedTags.length > 0) {
+      return scannedTags;
+    }
+  }
+  
+  return normalizedTags;
+}
+
+/**
+ * Scan description text để tìm các từ khóa khớp với TagDictionary
+ * Dùng khi không tìm được tags theo cách thông thường
+ */
+async function scanDescriptionForTags(description) {
+  if (!description || typeof description !== 'string') {
+    return [];
+  }
+  
+  const dictionary = await loadDictionary();
+  const normalizedDesc = normalizeString(description);
+  
+  if (!normalizedDesc || normalizedDesc.length < 10) {
+    return [];
+  }
+  
+  const foundTags = new Set();
+  
+  // Các keywords quan trọng cần tìm (ưu tiên cao)
+  const priorityKeywords = [
+    // Thể loại
+    'dam my', 'đam mỹ', 'bl', 'boys love',
+    'bach hop', 'bách hợp', 'gl', 'yuri',
+    'fanfic', 'dong nhan', 'đồng nhân',
+    // Ending
+    'happy ending', 'he', 'bad ending', 'be', 'open ending',
+    // Era
+    'hien dai', 'hiện đại', 'co dai', 'cổ đại', 'dan quoc', 'dân quốc',
+    // World
+    'abo', 'omegaverse', 'mat the', 'mạt thế', 'tu tien', 'tu tiên',
+    // Plot
+    'xuyen khong', 'xuyên không', 'trong sinh', 'trọng sinh', 'trung sinh', 'trùng sinh',
+    'he thong', 'hệ thống',
+    // Relationship
+    '1v1', '1x1', 'np', 'cuong cuong', 'cường cường',
+    'nien ha', 'niên hạ', 'nien thuong', 'niên thượng',
+    // Content
+    'smut', '18+', 'h van', 'h văn', 'ngot', 'ngọt', 'nguoc', 'ngược',
+    // Character
+    'tong tai', 'tổng tài', 'minh tinh', 'thien tai', 'thiên tài'
+  ];
+  
+  // Tìm priority keywords trước
+  for (const kw of priorityKeywords) {
+    const normalizedKw = normalizeString(kw);
+    if (normalizedDesc.includes(normalizedKw)) {
+      // Kiểm tra có trong dictionary không
+      if (dictionary[normalizedKw]) {
+        foundTags.add(dictionary[normalizedKw]);
+      }
+    }
+  }
+  
+  // Nếu chưa tìm đủ, scan toàn bộ dictionary
+  if (foundTags.size < 3) {
+    for (const [keyword, standardTag] of Object.entries(dictionary)) {
+      // Chỉ tìm keyword đủ dài (>= 4 ký tự) để tránh false positive
+      if (keyword.length >= 4 && normalizedDesc.includes(keyword)) {
+        // Kiểm tra word boundary để tránh substring match
+        const regex = new RegExp(`(^|[\\s,;.!?])${keyword}($|[\\s,;.!?])`, 'i');
+        if (regex.test(normalizedDesc)) {
+          foundTags.add(standardTag);
+        }
+      }
+    }
+  }
+  
+  return Array.from(foundTags);
 }
 
 /**

@@ -66,27 +66,109 @@ async function crawlNovelDetail(url) {
       }
     }
     
-    // Lấy mô tả
-    let description = '';
-    const descSelectors = [
-      '.story-description',
-      '.novel-description',
-      '.entry-content .description',
-      '.summary',
-      '.synopsis'
-    ];
-    
-    for (const selector of descSelectors) {
-      const found = $(selector).first().text().trim();
-      if (found) {
-        description = found;
-        break;
+    // Atlantis: Tác giả có thể hiển thị ngay dưới title dưới dạng text đơn giản
+    // Hoặc trong description có dòng "Tác giả: xxx"
+    if (!author) {
+      // Tìm element ngay sau h1 title
+      const titleEl = $('h1').first();
+      if (titleEl.length) {
+        // Lấy text ngay sau title (có thể là tên tác giả)
+        const nextText = titleEl.next().text().trim();
+        if (nextText && nextText.length < 50 && !nextText.includes('chương') && !nextText.includes('Chương')) {
+          // Có thể là tên tác giả
+          const possibleAuthor = nextText.split('\n')[0].trim();
+          if (possibleAuthor.length > 1 && possibleAuthor.length < 50) {
+            author = possibleAuthor;
+          }
+        }
       }
     }
     
-    // Nếu không tìm thấy description, lấy từ entry-content
+    // Tìm trong description nếu có dòng "Tác giả: xxx"
+    if (!author) {
+      const pageText = $('body').text();
+      const authorMatch = pageText.match(/Tác\s*giả\s*[:\-]\s*([^\n\r\(]+)/i);
+      if (authorMatch) {
+        author = authorMatch[1].trim().split(/[\(\[]/)[0].trim(); // Bỏ phần trong ngoặc
+        if (author.length > 50) author = '';
+      }
+    }
+    
+    // Lấy mô tả - Atlantis specific: tìm phần "Giới thiệu chung"
+    let description = '';
+    
+    // Atlantis: Mô tả nằm sau heading "Giới thiệu chung" hoặc "Giới thiệu"
+    $('h5, h4, h3, .section-title').each((i, el) => {
+      const headingText = $(el).text().trim().toLowerCase();
+      if (headingText.includes('giới thiệu')) {
+        // Lấy tất cả nội dung sau heading này
+        let content = '';
+        let nextEl = $(el).next();
+        
+        // Lấy nội dung cho đến khi gặp heading khác hoặc section khác
+        while (nextEl.length && !nextEl.is('h1, h2, h3, h4, h5, .chapter-list, #chapter-list, [class*="chapter"]')) {
+          const text = nextEl.text().trim();
+          if (text) {
+            content += text + '\n\n';
+          }
+          nextEl = nextEl.next();
+        }
+        
+        if (content.length > 50) {
+          description = content.trim();
+          console.log(`[Atlantis] Found description after "Giới thiệu" heading`);
+          return false; // break
+        }
+      }
+    });
+    
+    // Fallback: Tìm trong parent của heading
     if (!description) {
-      description = $('.entry-content p').first().text().trim();
+      const introSection = $('*:contains("Giới thiệu chung")').filter(function() {
+        return $(this).children().length === 0 || $(this).is('h5, h4, h3');
+      }).first().parent();
+      
+      if (introSection.length) {
+        const text = introSection.text().trim();
+        if (text.length > 100) {
+          description = text;
+          console.log(`[Atlantis] Found description from intro section parent`);
+        }
+      }
+    }
+    
+    // Fallback 2: Thử các selectors thông thường
+    if (!description) {
+      const descSelectors = [
+        '.story-description',
+        '.novel-description', 
+        '.description',
+        '.summary',
+        '.synopsis',
+        '.gioi-thieu',
+        '.intro',
+      ];
+      
+      for (const selector of descSelectors) {
+        try {
+          const found = $(selector).first().text().trim();
+          if (found && found.length > 30) {
+            description = found;
+            console.log(`[Atlantis] Found description with selector: ${selector}`);
+            break;
+          }
+        } catch (e) {}
+      }
+    }
+    
+    // Fallback 3: meta description
+    if (!description) {
+      const metaDesc = $('meta[name="description"]').attr('content') || 
+                       $('meta[property="og:description"]').attr('content');
+      if (metaDesc && metaDesc.length > 30) {
+        description = metaDesc;
+        console.log(`[Atlantis] Found description from meta tag`);
+      }
     }
     
     // Giới hạn độ dài description
@@ -115,21 +197,118 @@ async function crawlNovelDetail(url) {
     // Lấy tags
     const rawTags = [];
     
-    // Tags từ các thẻ tag
-    $('a[rel="tag"], .story-tags a, .novel-tags a, .tags a, .entry-tags a').each((i, el) => {
-      const tag = $(el).text().trim();
-      if (tag && tag.length < 50) {
-        rawTags.push(tag);
+    // Atlantis specific: Tags hiển thị dưới dạng badges/spans riêng biệt
+    // Tìm các element có text ngắn giống tag (sau phần description)
+    const knownTagKeywords = [
+      'chủ thụ', 'chủ công', 'hỗ công', 'cổ đại', 'hiện đại', 'cận đại',
+      'đam mỹ', 'bách hợp', 'he', 'be', 'abo', 'xuyên', 'ngọt', 'sủng',
+      'cung đình', 'cường cường', 'nhẹ nhàng', 'hài', 'ngược', 'sắc',
+      'tu tiên', 'huyền huyễn', 'đô thị', 'học đường', 'quân đội',
+      'kinh dị', 'trinh thám', 'lãng mạn', 'tâm lý', 'sinh tồn',
+      'hệ thống', 'trùng sinh', 'xuyên không', 'xuyên nhanh', 'fanfic'
+    ];
+    
+    // Tags từ các thẻ tag/badge
+    const tagSelectors = [
+      'a[rel="tag"]',
+      '.story-tags a',
+      '.novel-tags a', 
+      '.tags a',
+      '.entry-tags a',
+      '.post-tags a',
+      '.tag-list a',
+      '.the-loai a',
+      'a[href*="/tag/"]',
+      'a[href*="/the-loai/"]',
+      'a[href*="/category/"]',
+      '.category a',
+      '.categories a',
+      '.info-item a',
+      '.novel-info a',
+      '.story-info a',
+      // Atlantis: Tags có thể là span hoặc link trong khu vực tags
+      'span.tag',
+      '.tag-badge',
+      '.badge',
+    ];
+    
+    tagSelectors.forEach(selector => {
+      $(selector).each((i, el) => {
+        const tag = $(el).text().trim();
+        if (tag && tag.length > 1 && tag.length < 50 && !rawTags.includes(tag)) {
+          // Loại bỏ các text không phải tag (navigation, etc.)
+          const lowerTag = tag.toLowerCase();
+          if (!lowerTag.includes('đăng nhập') && 
+              !lowerTag.includes('đăng ký') && 
+              !lowerTag.includes('trang chủ') &&
+              !lowerTag.includes('bình luận') &&
+              !lowerTag.includes('chương')) {
+            rawTags.push(tag);
+          }
+        }
+      });
+    });
+    
+    // Lấy tags từ description nếu có format "Thể loại: xxx, yyy"
+    if (description) {
+      const tagPatterns = [
+        /Thể\s*loại\s*[:\-]\s*([^\n\r]+)/gi,
+      ];
+      
+      tagPatterns.forEach(pattern => {
+        let match;
+        while ((match = pattern.exec(description)) !== null) {
+          const tagLine = match[1];
+          // Tách bằng dấu phẩy
+          tagLine.split(/[,，、]+/).forEach(t => {
+            let tag = t.trim();
+            // Loại bỏ dấu chấm cuối
+            tag = tag.replace(/\.$/, '');
+            
+            // Chỉ nhận tag ngắn hợp lệ
+            if (tag.length > 25) return; // Quá dài, không phải tag
+            if (tag.length < 2) return;
+            if (tag.match(/^\d+/)) return; // Bắt đầu bằng số
+            if (tag.match(/^(hoàn thành|đang|nguồn|tình trạng|editor|tác giả)/i)) return;
+            if (tag.includes(':')) return; // Có dấu hai chấm - là label
+            
+            // Chuẩn hóa tag
+            const normalizedTag = tag.charAt(0).toUpperCase() + tag.slice(1);
+            
+            if (!rawTags.some(t => t.toLowerCase() === normalizedTag.toLowerCase())) {
+              rawTags.push(normalizedTag);
+            }
+          });
+        }
+      });
+    }
+    
+    // Loại bỏ các tag rác
+    const filteredTags = rawTags.filter(tag => {
+      if (tag.length > 25) return false; // Tag thường ngắn
+      if (tag.length < 2) return false;
+      if (tag.includes(':')) return false;
+      if (tag.match(/^(nguồn|tình trạng|editor|tác giả|giới thiệu|bị |đánh |giết |đốt |mặc |ánh |chỉ |thống |nhốt )/i)) return false;
+      if (tag.match(/^\d/)) return false;
+      if (tag.includes('___')) return false;
+      if (tag.split(' ').length > 4) return false; // Quá nhiều từ (tag thường 1-3 từ)
+      // Loại bỏ các cụm từ từ description (không phải tag)
+      if (tag.match(/(cắt gân|gãy chân|hôn quân|đô thành|áo cưới|ba năm|thiên hạ|nham hiểm)/i)) return false;
+      return true;
+    });
+    
+    // Remove duplicates (case-insensitive)
+    const uniqueTags = [];
+    const seenLower = new Set();
+    filteredTags.forEach(tag => {
+      const lower = tag.toLowerCase();
+      if (!seenLower.has(lower)) {
+        seenLower.add(lower);
+        uniqueTags.push(tag);
       }
     });
     
-    // Tags từ categories
-    $('a[href*="/the-loai/"], .category a').each((i, el) => {
-      const tag = $(el).text().trim();
-      if (tag && tag.length < 50 && !rawTags.includes(tag)) {
-        rawTags.push(tag);
-      }
-    });
+    console.log(`[Atlantis] Found ${uniqueTags.length} raw tags:`, uniqueTags.slice(0, 15));
     
     // Lấy trạng thái
     let status = 'unknown';
@@ -162,13 +341,13 @@ async function crawlNovelDetail(url) {
     }
     
     // Thêm tag Đam Mỹ nếu chưa có
-    const hasDammy = rawTags.some(t => 
+    const hasDammy = uniqueTags.some(t => 
       t.toLowerCase().includes('đam mỹ') || 
       t.toLowerCase().includes('bl') ||
       t.toLowerCase().includes('boy love')
     );
     if (!hasDammy) {
-      rawTags.push('Đam Mỹ');
+      uniqueTags.push('Đam Mỹ');
     }
     
     const result = {
@@ -176,7 +355,7 @@ async function crawlNovelDetail(url) {
       author: author || 'Unknown',
       description,
       coverImage,
-      rawTags: [...new Set(rawTags)], // Remove duplicates
+      rawTags: uniqueTags,
       originalLink: url,
       source: 'atlantis',
       status,
@@ -184,7 +363,7 @@ async function crawlNovelDetail(url) {
       readCount
     };
     
-    console.log(`[Atlantis] Extracted: "${title}" - ${rawTags.length} tags`);
+    console.log(`[Atlantis] Extracted: "${title}" - ${uniqueTags.length} tags`);
     return result;
     
   } catch (error) {

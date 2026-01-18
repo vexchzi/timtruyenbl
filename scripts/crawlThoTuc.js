@@ -2,6 +2,7 @@ require('dotenv').config();
 const axios = require('axios');
 const mongoose = require('mongoose');
 const Novel = require('../models/Novel');
+const { normalizeTags } = require('../utils/tagNormalizer');
 
 // Kết nối MongoDB
 mongoose.connect(process.env.MONGODB_URI)
@@ -162,13 +163,19 @@ async function crawlThoTuc(maxNovels = 500) {
         }
         
         // Kiểm tra xem truyện CÓ THẬT SỰ là 18+/Thô tục không
+        // IMPORTANT: không dùng các từ quá ngắn như "dam" / "tuc"
+        // vì sẽ match nhầm "đam mỹ" (dam my) hoặc "tục" trong ngữ cảnh khác.
         const textToCheck = `${title} ${description} ${tags.join(' ')}`.toLowerCase();
         const EXPLICIT_KEYWORDS = [
-          'thô tục', 'thotuc', '18+', 'smut', 'cao h', 'caoh',
-          'h nặng', 'hnang', 'nc-17', 'nc17', 'mature',
-          'lemon', 'lime', 'r18', 'r-18', 'nsfw',
-          'cảnh nóng', 'canhnong', 'xxx', 'porn',
-          'dâm', 'dam', 'tục', 'tuc', 'h văn', 'hvan'
+          // 18+
+          '18+', 'r18', 'r-18', 'p18', 'po18', 'nc17', 'nc-17', 'nc18', 'nc-18',
+          'mature', 'nsfw', 'explicit', 'adult', 'smut', 'sex', 'pwp', 'lemon', 'lime',
+          'cao h', 'caoh', 'h văn', 'hvan', 'h++', 'h+++', 'h nặng', 'hnang',
+          'cảnh nóng', 'canhnong', 'có thịt', 'nhiều thịt', 'thịt',
+          // Thô tục / dirty talk / fetish
+          'thô tục', 'thotuc', 'dirtytalk', 'dirty talk', 'talkdirty',
+          'xxx', 'porn', 'bdsm', 'gangbang', 'sextoy', 'sex toy', 'sex toys',
+          'pisskink', 'nuoctieuplay', 'loạn luân', 'loan luan', 'cưỡng hiếp', 'cuong hiep'
         ];
         
         const isExplicit = EXPLICIT_KEYWORDS.some(kw => textToCheck.includes(kw));
@@ -180,7 +187,11 @@ async function crawlThoTuc(maxNovels = 500) {
           continue;
         }
         
-        // Tạo novel mới - gắn tag 18+ và Thô Tục CHỈ KHI thật sự là 18+
+        // Tạo novel mới - normalize tags và chỉ gắn 18+/Thô Tục khi thật sự có dấu hiệu
+        const standardTags = await normalizeTags(tags);
+        if (!standardTags.includes('18+')) standardTags.push('18+');
+        if (!standardTags.includes('Thô Tục')) standardTags.push('Thô Tục');
+
         const novel = new Novel({
           title: title,
           author: story.user?.name || 'Unknown',
@@ -188,7 +199,7 @@ async function crawlThoTuc(maxNovels = 500) {
           coverImage: story.cover || '',
           originalLink: originalLink,
           rawTags: tags,
-          standardTags: ['18+', 'Thô Tục'],
+          standardTags,
           source: 'wattpad',
           chapterCount: story.numParts || 0,
           readCount: story.readCount || 0,

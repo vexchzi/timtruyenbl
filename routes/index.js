@@ -3,7 +3,9 @@
  */
 
 const novelRoutes = require('./novelRoutes');
+const adminRoutes = require('./adminRoutes');
 
 module.exports = {
-  novelRoutes
+  novelRoutes,
+  adminRoutes
 };

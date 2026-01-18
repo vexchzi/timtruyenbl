@@ -3,20 +3,7 @@ import NovelCard, { NovelCardGrid, NovelCardSkeleton, NovelCardGridSkeleton } fr
 import TagFilter from './TagFilter';
 import NovelModal from './NovelModal';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-const FANFIC_KEYWORDS = [
-  'đồng nhân', 'đồngnhân', 'dong nhan', 'fanfic', 'fanfiction', 'crossover',
-  '[hp]', '[naruto]', '[marvel]', '[bts]', '[exo]', '[nct]', '[genshin]',
-  'minecraft', 'mcyt', 'dream smp', 'bts', 'bangtan', 'exo', 'nct', 'got7',
-  'jungkook', 'taehyung', 'jimin', 'vkook', 'taekook', 'bigbang', 'nyongtory',
-  'tfboys', 'kaiyuan', 'conan', 'kaishin', 'khr', 'katekyo', 'mdzs', 'tgcf', 'svsss',
-  'naruto', 'sasunaru', 'haikyuu', 'kagehina', 'jjk', 'gojo', 'aot', 'levi',
-  'bnha', 'bakudeku', 'genshin', 'zhongli', 'harry potter', 'drarry',
-  'marvel', 'thor', 'loki', 'stucky', 'brightwin', 'mewgulf', 'tiêu chiến',
-  'vương nhất bác', 'bjyx', 'chuyển ver', 'real person', 'rps',
-  'español', 'english', 'indonesia', 'tagalog'
-];
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export default function BrowsePage() {
   const [novels, setNovels] = useState([]);
@@ -72,13 +59,9 @@ export default function BrowsePage() {
 
   const filteredNovels = useMemo(() => {
     return novels.filter(novel => {
-      const titleLower = novel.title?.toLowerCase() || '';
-      const authorLower = novel.author?.toLowerCase() || '';
-      const descLower = novel.description?.toLowerCase() || '';
-      const allTagsStr = [...(novel.standardTags || []), ...(novel.rawTags || [])].map(t => t.toLowerCase()).join(' ');
-
-      if (FANFIC_KEYWORDS.some(kw => titleLower.includes(kw) || authorLower.includes(kw) || descLower.includes(kw) || allTagsStr.includes(kw))) return false;
+      // Chỉ lọc nội dung không phải tiếng Việt
       if (!isVietnamese(novel.title) && !isVietnamese(novel.description) && !novel.rawTags?.some(t => isVietnamese(t))) return false;
+      // Lọc theo tags bị loại trừ
       if (excludedTags.length > 0 && novel.standardTags?.some(t => excludedTags.includes(t))) return false;
       return true;
     });

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import TagBadge from './TagBadge';
 import { getBestAuthorName } from '../utils/authorUtils';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const PLACEHOLDER_COLORS = {
   'A': 'from-stone-700 to-stone-800',

@@ -12,7 +12,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 
 // Import routes
-const { novelRoutes } = require('./routes');
+const { novelRoutes, adminRoutes } = require('./routes');
 
 // Import utilities
 const { warmUpCache } = require('./utils/tagNormalizer');
@@ -33,7 +33,7 @@ const app = express();
 app.use(cors({
   origin: true, // Cho phép tất cả origins trong production
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Token'],
   credentials: true
 }));
 
@@ -55,13 +55,24 @@ if (NODE_ENV === 'development') {
   });
 }
 
+// ============== STATIC FILES ==============
+
+const path = require('path');
+
+// Serve admin page and other static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve React frontend (built files)
+app.use(express.static(path.join(__dirname, 'client/dist')));
+
 // ============== ROUTES ==============
 
 // API routes
 app.use('/api', novelRoutes);
+app.use('/api/admin', adminRoutes);
 
-// Root endpoint
-app.get('/', (req, res) => {
+// API info endpoint
+app.get('/api', (req, res) => {
   res.json({
     name: 'Novel Recommender API',
     version: '1.0.0',
@@ -79,9 +90,36 @@ app.get('/', (req, res) => {
   });
 });
 
+// ============== SPA FALLBACK ==============
+
+// Serve React app for all non-API routes
+app.get('*', (req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  
+  // Skip admin page
+  if (req.path === '/admin.html' || req.path === '/admin') {
+    return res.sendFile(path.join(__dirname, 'public/admin.html'));
+  }
+  
+  // Serve React SPA
+  const indexPath = path.join(__dirname, 'client/dist/index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      // If React build doesn't exist, send API info
+      res.json({
+        name: 'Novel Recommender API',
+        message: 'Frontend not built. Run: cd client && npm run build'
+      });
+    }
+  });
+});
+
 // ============== ERROR HANDLING ==============
 
-// 404 handler
+// 404 handler for API routes
 app.use((req, res) => {
   res.status(404).json({
     success: false,

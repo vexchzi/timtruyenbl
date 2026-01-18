@@ -117,6 +117,95 @@ function isFanfic(story) {
   return FANFIC_KEYWORDS.some(keyword => checkText.includes(keyword.toLowerCase()));
 }
 
+// Exclude Girl Love / Bách Hợp content
+const BACHHOP_KEYWORDS = [
+  'bách hợp',
+  'bach hop',
+  'bhtt',
+  'girl love',
+  'girls love',
+  'girllove',
+  'gl',
+  'yuri',
+  'lesbian',
+  '百合',
+];
+
+// Exclude Ngôn Tình / BG / HET (nam-nữ)
+const NGONTINH_KEYWORDS = [
+  'ngôn tình',
+  'ngon tinh',
+  'ngontinh',
+  'bg',
+  'nam nữ',
+  'nam nu',
+  'nam-nu',
+  'nữ nam',
+  'nu nam',
+  'nu-nam',
+  'nữ x nam',
+  'nu x nam',
+  'nam x nữ',
+  'nam x nu',
+];
+
+function tokenize(text) {
+  return (text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\u00C0-\u1EF9\s]/gi, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function hasWholePhrase(haystack, phrase) {
+  const h = ` ${String(haystack || '').toLowerCase()} `;
+  const p = String(phrase || '').toLowerCase().trim();
+  if (!p) return false;
+  return h.includes(` ${p} `);
+}
+
+function isBachHop(story) {
+  const title = story.title || '';
+  const description = story.description || '';
+  const tags = (story.tags || []).map(t => (typeof t === 'string' ? t : t.name)).filter(Boolean);
+
+  const combined = `${title} ${description}`;
+  const tokens = new Set(tokenize(combined));
+  const tagTokens = new Set(tokenize(tags.join(' ')));
+
+  for (const kw of BACHHOP_KEYWORDS) {
+    const k = String(kw).toLowerCase().trim();
+    if (!k) continue;
+    if (!k.includes(' ')) {
+      if (tokens.has(k) || tagTokens.has(k)) return true;
+      continue;
+    }
+    if (hasWholePhrase(combined, k) || hasWholePhrase(tags.join(' '), k)) return true;
+  }
+  return false;
+}
+
+function isNgonTinh(story) {
+  const title = story.title || '';
+  const description = story.description || '';
+  const tags = (story.tags || []).map(t => (typeof t === 'string' ? t : t.name)).filter(Boolean);
+
+  const combined = `${title} ${description}`;
+  const tokens = new Set(tokenize(combined));
+  const tagTokens = new Set(tokenize(tags.join(' ')));
+
+  for (const kw of NGONTINH_KEYWORDS) {
+    const k = String(kw).toLowerCase().trim();
+    if (!k) continue;
+    if (!k.includes(' ')) {
+      if (tokens.has(k) || tagTokens.has(k)) return true;
+      continue;
+    }
+    if (hasWholePhrase(combined, k) || hasWholePhrase(tags.join(' '), k)) return true;
+  }
+  return false;
+}
+
 function hasVietnamese(text) {
   if (!text) return false;
   const vietnamesePattern = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
@@ -155,6 +244,16 @@ async function saveStory(story) {
     // Check fanfic
     if (isFanfic(story)) {
       return { status: 'skipped', reason: 'fanfic' };
+    }
+
+    // Skip bách hợp / girl love
+    if (isBachHop(story)) {
+      return { status: 'skipped', reason: 'bach-hop' };
+    }
+
+    // Skip ngôn tình / BG (nam-nữ)
+    if (isNgonTinh(story)) {
+      return { status: 'skipped', reason: 'ngon-tinh' };
     }
 
     // Check Vietnamese content

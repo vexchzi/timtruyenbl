@@ -1,10 +1,20 @@
 import { useState, useEffect, useMemo } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const CATEGORY_ORDER = ['genre', 'ending', 'setting', 'content', 'relationship', 'character', 'other'];
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const CATEGORY_ORDER = ['type', 'ending', 'era', 'world', 'setting', 'genre', 'plot', 'relationship', 'couple', 'character', 'content', 'other'];
 const CATEGORY_NAMES = {
-  genre: 'Thể loại', ending: 'Kết thúc', relationship: 'Quan hệ',
-  character: 'Nhân vật', content: 'Nội dung', setting: 'Bối cảnh', other: 'Khác'
+  type: 'Thể loại',
+  ending: 'Kết thúc',
+  era: 'Thời đại',
+  world: 'Thế giới',
+  setting: 'Bối cảnh',
+  genre: 'Phong cách',
+  plot: 'Xu hướng',
+  relationship: 'Mối quan hệ',
+  couple: 'Couple',
+  character: 'Nhân vật',
+  content: 'Nội dung',
+  other: 'Khác'
 };
 
 /**
@@ -13,7 +23,7 @@ const CATEGORY_NAMES = {
 export default function TagFilter({ selectedTags = [], excludedTags = [], onTagsChange, onExcludedTagsChange, onTagDescriptionsLoaded }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('include');
-  const [expandedCategories, setExpandedCategories] = useState(['genre', 'ending', 'content']);
+  const [expandedCategories, setExpandedCategories] = useState(['type', 'ending', 'genre', 'plot']);
   const [tagCategories, setTagCategories] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,6 +34,8 @@ export default function TagFilter({ selectedTags = [], excludedTags = [], onTags
       try {
         const response = await fetch(`${API_BASE}/tags?minCount=3`);
         const data = await response.json();
+        console.log('API Response:', data);
+        console.log('Categories keys:', data.data?.categories ? Object.keys(data.data.categories) : 'none');
         if (data.success && data.data.categories) {
           setTagCategories(data.data.categories);
           if (onTagDescriptionsLoaded) {

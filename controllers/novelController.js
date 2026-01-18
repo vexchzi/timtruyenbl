@@ -13,8 +13,97 @@ const { Novel, TagDictionary } = require('../models');
 const { crawlWattpad, normalizeWattpadUrl } = require('../services/crawler');
 const { crawlSinglePost: crawlWordpress } = require('../services/wordpressCrawler');
 const { crawlNovelDetail: crawlAtlantis, normalizeAtlantisUrl } = require('../services/atlantisCrawler');
-const { normalizeTags, normalizeTagsDetailed } = require('../utils/tagNormalizer');
+const { normalizeTags, normalizeTagsDetailed, normalizeString } = require('../utils/tagNormalizer');
 const { findSimilarNovels, getPopularTags, getStats } = require('../services/recommender');
+
+// Disallow Bách Hợp / GL content across the app
+const BACHHOP_KEYWORDS = [
+  'bach hop',
+  'bhtt',
+  'girl love',
+  'girls love',
+  'girllove',
+  'gl',
+  'yuri',
+  'lesbian',
+  '百合',
+];
+
+const NGONTINH_KEYWORDS = [
+  'ngon tinh',
+  'ngontinh',
+  'bg',
+  'nam nu',
+  'nam-nu',
+  'nu nam',
+  'nu-nam',
+  'nu x nam',
+  'nam x nu',
+];
+
+function tokenizeNormalized(str) {
+  const norm = normalizeString(str);
+  if (!norm) return [];
+  return norm.split(/\s+/).filter(Boolean);
+}
+
+function hasWholePhrase(haystackNorm, phraseNorm) {
+  if (!haystackNorm || !phraseNorm) return false;
+  const re = new RegExp(`(^|\\s)${phraseNorm.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}(\\s|$)`, 'i');
+  return re.test(haystackNorm);
+}
+
+function isBachHopContent({ title = '', description = '', rawTags = [], standardTags = [] }) {
+  const combinedNorm = normalizeString(`${title} ${description} ${(rawTags || []).join(' ')} ${(standardTags || []).join(' ')}`);
+  const tokens = new Set(tokenizeNormalized(combinedNorm));
+  const rawNorm = normalizeString((rawTags || []).join(' '));
+  const stdNorm = normalizeString((standardTags || []).join(' '));
+
+  // explicit standard tag
+  if ((standardTags || []).some(t => normalizeString(t) === 'bach hop')) return true;
+
+  for (const kw of BACHHOP_KEYWORDS) {
+    const kwNorm = normalizeString(kw);
+    if (!kwNorm) continue;
+
+    if (!kwNorm.includes(' ')) {
+      if (tokens.has(kwNorm)) return true;
+      continue;
+    }
+
+    if (hasWholePhrase(combinedNorm, kwNorm) || hasWholePhrase(rawNorm, kwNorm) || hasWholePhrase(stdNorm, kwNorm)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function isNgonTinhContent({ title = '', description = '', rawTags = [], standardTags = [] }) {
+  const combinedNorm = normalizeString(`${title} ${description} ${(rawTags || []).join(' ')} ${(standardTags || []).join(' ')}`);
+  const tokens = new Set(tokenizeNormalized(combinedNorm));
+  const rawNorm = normalizeString((rawTags || []).join(' '));
+  const stdNorm = normalizeString((standardTags || []).join(' '));
+
+  // explicit standard tag
+  if ((standardTags || []).some(t => normalizeString(t) === 'ngon tinh')) return true;
+
+  for (const kw of NGONTINH_KEYWORDS) {
+    const kwNorm = normalizeString(kw);
+    if (!kwNorm) continue;
+
+    if (!kwNorm.includes(' ')) {
+      if (tokens.has(kwNorm)) return true;
+      continue;
+    }
+
+    if (hasWholePhrase(combinedNorm, kwNorm) || hasWholePhrase(rawNorm, kwNorm) || hasWholePhrase(stdNorm, kwNorm)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 /**
  * POST /api/recommend
@@ -104,6 +193,33 @@ async function recommend(req, res) {
 
       // Normalize tags
       const standardTags = await normalizeTags(crawledData.rawTags);
+
+      // Disallow bách hợp / GL content
+      if (isBachHopContent({
+        title: crawledData.title,
+        description: crawledData.description,
+        rawTags: crawledData.rawTags,
+        standardTags
+      })) {
+        return res.status(400).json({
+          success: false,
+          error: 'Unsupported content',
+          message: 'Không hỗ trợ crawl/lưu truyện thuộc thể loại Bách Hợp / GL.'
+        });
+      }
+
+      if (isNgonTinhContent({
+        title: crawledData.title,
+        description: crawledData.description,
+        rawTags: crawledData.rawTags,
+        standardTags
+      })) {
+        return res.status(400).json({
+          success: false,
+          error: 'Unsupported content',
+          message: 'Không hỗ trợ crawl/lưu truyện thuộc thể loại Ngôn Tình (BG/HET).' 
+        });
+      }
 
       // Lưu vào DB (upsert để tránh race condition)
       const novelDoc = await Novel.findOneAndUpdate(
@@ -201,7 +317,11 @@ async function getNovelsList(req, res) {
       page = 1,
       limit = 20,
       tags,
+      tag,
       search,
+      source,
+      noTags,
+      hasTags,
       sort = 'newest'
     } = req.query;
 
@@ -213,20 +333,46 @@ async function getNovelsList(req, res) {
     // Build query
     const query = {};
 
-    // Filter by tags
-    if (tags) {
-      const tagArray = tags.split(',').map(t => t.trim()).filter(Boolean);
+    // Filter by tags (comma-separated or single tag)
+    const tagFilter = tags || tag;
+    if (tagFilter) {
+      const tagArray = tagFilter.split(',').map(t => t.trim()).filter(Boolean);
       if (tagArray.length > 0) {
         query.standardTags = { $all: tagArray };
       }
     }
 
+    // Filter novels without tags
+    if (noTags === 'true' || noTags === '1') {
+      query.$or = [
+        { standardTags: { $exists: false } },
+        { standardTags: { $size: 0 } }
+      ];
+    }
+
+    // Filter novels with tags
+    if (hasTags === 'true' || hasTags === '1') {
+      query.standardTags = { ...query.standardTags, $exists: true, $not: { $size: 0 } };
+    }
+
+    // Filter by source
+    if (source) {
+      query.source = { $regex: source, $options: 'i' };
+    }
+
     // Search by title (text search hoặc regex)
     if (search) {
-      query.$or = [
+      // If $or already used by noTags, use $and
+      const searchCondition = [
         { title: { $regex: search, $options: 'i' } },
         { author: { $regex: search, $options: 'i' } }
       ];
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, { $or: searchCondition }];
+        delete query.$or;
+      } else {
+        query.$or = searchCondition;
+      }
     }
 
     // Sort options
@@ -239,24 +385,27 @@ async function getNovelsList(req, res) {
     const sortBy = sortOptions[sort] || sortOptions.newest;
 
     // Execute query với Promise.all để parallel
-    const [novels, total] = await Promise.all([
+    const [novels, total, sources] = await Promise.all([
       Novel.find(query)
         .select('title author coverImage originalLink standardTags rawTags description readCount chapterCount source createdAt')
         .sort(sortBy)
         .skip(skip)
         .limit(limitNum)
         .lean(),
-      Novel.countDocuments(query)
+      Novel.countDocuments(query),
+      Novel.distinct('source')
     ]);
 
     return res.json({
       success: true,
       data: {
         novels,
+        sources: sources.filter(Boolean).sort(),
         pagination: {
           page: pageNum,
           limit: limitNum,
           total,
+          pages: Math.ceil(total / limitNum),
           totalPages: Math.ceil(total / limitNum),
           hasMore: pageNum * limitNum < total
         }
@@ -399,16 +548,24 @@ async function getTags(req, res) {
 
     // Tổ chức tags theo category
     const categorizedTags = {
+      type: { name: 'Thể loại', tags: [] },
       ending: { name: 'Kết thúc', tags: [] },
-      relationship: { name: 'Quan hệ', tags: [] },
+      era: { name: 'Thời đại', tags: [] },
+      world: { name: 'Thế giới', tags: [] },
+      setting: { name: 'Bối cảnh', tags: [] },
+      genre: { name: 'Phong cách', tags: [] },
+      plot: { name: 'Xu hướng', tags: [] },
+      relationship: { name: 'Mối quan hệ', tags: [] },
+      couple: { name: 'Couple', tags: [] },
       character: { name: 'Nhân vật', tags: [] },
       content: { name: 'Nội dung', tags: [] },
-      genre: { name: 'Thể loại', tags: [] },
-      setting: { name: 'Bối cảnh', tags: [] },
       other: { name: 'Khác', tags: [] }
     };
 
+    const bannedTags = new Set(['Bách Hợp', 'Ngôn Tình']);
+
     usedTags.forEach(tag => {
+      if (bannedTags.has(tag._id)) return;
       const info = tagCategoryMap[tag._id] || { category: 'other', priority: 5, description: '' };
       const category = categorizedTags[info.category] || categorizedTags.other;
       

@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { getBestAuthorName } from '../utils/authorUtils';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 /**
- * NovelModal - Soft Theme
+ * NovelModal - Soft Theme (Read-only)
  */
 export default function NovelModal({ novel, isOpen, onClose, onTagClick }) {
   if (!isOpen || !novel) return null;
