@@ -31,11 +31,10 @@ const app = express();
 
 // CORS - Cho phép frontend gọi API
 app.use(cors({
-  origin: NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL, 'https://timtruyenbl.vercel.app'].filter(Boolean)
-    : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'http://localhost:5177', 'http://localhost:5178', 'http://localhost:5179'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: true, // Cho phép tất cả origins trong production
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 // Parse JSON body
