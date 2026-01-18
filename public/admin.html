@@ -1105,7 +1105,7 @@
       
       try {
         // Test token by calling a protected endpoint
-        const res = await fetch(API + '/admin/novels?limit=1', {
+        const res = await fetch(API + '/admin/novels/stats', {
           headers: { 
             'Content-Type': 'application/json',
             'X-Admin-Token': token 
@@ -1152,7 +1152,7 @@
     async function checkSavedToken() {
       if (adminToken) {
         try {
-          const res = await fetch(API + '/admin/novels?limit=1', {
+          const res = await fetch(API + '/admin/novels/stats', {
             headers: { 
               'Content-Type': 'application/json',
               'X-Admin-Token': adminToken 
