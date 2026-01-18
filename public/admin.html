@@ -1172,24 +1172,22 @@
       hideMainContent();
     }
     
-    // Load data
+    // Load data - use admin API to get all tags from TagDictionary
     async function loadTags() {
-      const data = await api('/tags');
-      if (data.success && data.data?.categories) {
-        allTags = data.data.categories;
-        
-        // Populate tag filter
+      const data = await api('/admin/tags');
+      if (data.success && data.data) {
+        // Build allTags structure from admin tags
+        allTags = {};
         const tagFilter = document.getElementById('tagFilter');
         tagFilter.innerHTML = '<option value="">Tất cả tags</option>';
-        for (const [cat, catData] of Object.entries(allTags)) {
-          // Handle both structures: array or {name, tags: [...]}
-          const tags = Array.isArray(catData) ? catData : (catData.tags || []);
-          for (const t of tags) {
-            const tagName = t.tag || t.name;
-            if (tagName) {
-              tagFilter.innerHTML += `<option value="${tagName}">${tagName}</option>`;
-            }
+        
+        for (const tag of data.data) {
+          const cat = tag.category || 'other';
+          if (!allTags[cat]) {
+            allTags[cat] = { name: cat, tags: [] };
           }
+          allTags[cat].tags.push({ tag: tag.tag, name: tag.tag });
+          tagFilter.innerHTML += `<option value="${tag.tag}">${tag.tag}</option>`;
         }
       }
     }
