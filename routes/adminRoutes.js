@@ -37,7 +37,11 @@ router.put('/tags/:id', adminController.updateTag);
 router.delete('/tags/:id', adminController.deleteTag);
 
 // Delete a novel
+// Delete a novel
 router.delete('/novels/:id', adminController.deleteNovel);
+
+// Analyze tags from text
+router.post('/tags/analyze', adminController.analyzeTagsText);
 
 // ============== Tag Reports Management ==============
 

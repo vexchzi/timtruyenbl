@@ -1236,8 +1236,55 @@ module.exports = {
   resolveReport,
   deleteReport,
   // Site notice management
+  // Site notice management
   getNotice,
-  updateNotice
+  updateNotice,
+  // Helper
+  analyzeTagsText
 };
+
+/**
+ * POST /api/admin/tags/analyze
+ * Phân tích danh sách tags từ văn bản thô (copy paste)
+ * Body: { text: "..." }
+ */
+async function analyzeTagsText(req, res) {
+  try {
+    const { text } = req.body;
+
+    if (!text || typeof text !== 'string') {
+      return res.json({ success: true, data: [] });
+    }
+
+    // Sử dụng tagNormalizer để xử lý
+    // Vì text có thể là "Thể loại: A, B, C" hoặc chỉ là "A, B, C"
+    // Ta giả lập nó như một description hoặc raw tag string
+    const { extractTagsFromDescription, normalizeTags } = require('../utils/tagNormalizer');
+
+    let extractedRaw = [];
+
+    // 1. Thử extract theo pattern "Thể loại: ..."
+    extractedRaw = extractTagsFromDescription(text);
+
+    // 2. Nếu không ra gì (hoặc text chỉ là list A, B, C), tách thủ công
+    if (extractedRaw.length === 0) {
+      extractedRaw = text.split(/[,，、|\n;]+/).map(t => t.trim()).filter(t => t.length > 0);
+    }
+
+    // 3. Normalize
+    const standardTags = await normalizeTags(extractedRaw);
+
+    return res.json({
+      success: true,
+      data: standardTags,
+      rawCount: extractedRaw.length,
+      matchedCount: standardTags.length
+    });
+
+  } catch (error) {
+    console.error('[Admin] analyzeTagsText error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+}
 
 
