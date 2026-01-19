@@ -4173,7 +4173,7 @@
 
     function exportCsv() {
       const tag = document.getElementById('exportTagSelect').value;
-      const url = API + '/novels/export' + (tag ? `?tag=${encodeURIComponent(tag)}` : '');
+      const url = API + '/admin/novels/export' + (tag ? `?tag=${encodeURIComponent(tag)}` : '');
       if (!adminToken) { showToast('Cần đăng nhập!'); return; }
       window.open(url, '_blank');
     }
@@ -4258,7 +4258,7 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch(API + '/novels/import', {
+        const res = await fetch(API + '/admin/novels/import', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
           body: JSON.stringify({ items: importData })
