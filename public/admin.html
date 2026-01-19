@@ -3666,7 +3666,8 @@
               ${report.status === 'pending' ? `
                 <button class="btn-report-action btn-report-reject" onclick="updateReportStatus('${report._id}', 'rejected')">✗ Từ chối</button>
               ` : ''}
-              <button class="btn-report-action btn-report-delete" onclick="deleteReport('${report._id}')">🗑️ Xoá</button>
+              <button class="btn-report-action btn-report-delete" onclick="deleteNovelFromReport('${novel._id}', '${report._id}')" title="Xoá vĩnh viễn truyện này">🗑️ Xoá Truyện</button>
+              <button class="btn-report-action" style="background:transparent;border:1px solid #404050;color:#606070;padding:4px 8px" onclick="deleteReport('${report._id}')" title="Chỉ xoá báo cáo này">x report</button>
             </div>
           </div>
         `;
@@ -3732,19 +3733,39 @@
     }
 
     async function deleteReport(reportId) {
-      if (!confirm('Bạn có chắc muốn xoá báo cáo này?')) return;
+      if (!confirm('Bạn có chắc muốn xoá báo cáo này (không xoá truyện)?')) return;
 
       try {
-        const data = await api(`/admin/reports/${reportId}`, {
-          method: 'DELETE'
-        });
-
+        const data = await api(`/admin/reports/${reportId}`, { method: 'DELETE' });
         if (data.success) {
           showToast('Đã xoá báo cáo');
           await loadReports();
         } else {
           showToast(data.message || 'Lỗi', true);
         }
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, true);
+      }
+    }
+
+    async function deleteNovelFromReport(novelId, reportId) {
+      if (!confirm('CẢNH BÁO: Bạn có chắc chắn muốn XOÁ VĨNH VIỄN truyện này khỏi database?\nHành động này không thể hoàn tác!')) return;
+
+      try {
+        // 1. Delete Novel
+        const novelRes = await api(`/admin/novels/${novelId}`, { method: 'DELETE' });
+
+        if (!novelRes.success) {
+          showToast('Lỗi xoá truyện: ' + (novelRes.message || 'Unknown'), true);
+          return;
+        }
+
+        // 2. Delete Report
+        await api(`/admin/reports/${reportId}`, { method: 'DELETE' });
+
+        showToast('Đã xoá truyện và báo cáo thành công');
+        await loadReports();
+
       } catch (err) {
         showToast('Lỗi: ' + err.message, true);
       }
