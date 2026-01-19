@@ -45,6 +45,10 @@ router.post('/tags/analyze', adminController.analyzeTagsText);
 // Bulk add tag to novels
 router.post('/tags/bulk-add-novels', adminController.bulkAddTagToNovels);
 
+// Export/Import
+router.get('/novels/export', adminController.exportNovelsCsv);
+router.post('/novels/import', adminController.bulkUpdateNovels);
+
 // ============== Tag Reports Management ==============
 
 // Get report statistics

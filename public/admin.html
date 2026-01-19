@@ -1419,6 +1419,7 @@
         <span id="reportBadge" class="report-badge" style="display:none">0</span>
       </button>
       <button class="tab-btn" onclick="switchTab('notice')">Thông báo Web</button>
+      <button class="tab-btn" onclick="switchTab('tools')">Công cụ</button>
     </div>
 
     <!-- Tab: Novels -->
@@ -1717,6 +1718,59 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Tab: Tools -->
+  <div class="tab-content" id="tab-tools">
+    <div class="report-stats-panel" style="flex-direction:column;align-items:stretch">
+      <h3 style="color:#e8a0b8;margin-bottom:15px;font-size:1.1rem">🛠️ Công cụ Dữ liệu</h3>
+
+      <!-- Export Section -->
+      <div class="data-section"
+        style="background:#1a1a24; padding:20px; border-radius:12px; margin-bottom:20px; border:1px solid #2a2a38">
+        <h4 style="color:#60c0b0; margin-bottom:15px; border-bottom:1px solid #2a2a38; padding-bottom:10px">📤 Export
+          Truyện (CSV)</h4>
+        <p style="color:#909098; font-size:0.9rem; margin-bottom:15px">
+          Xuất danh sách truyện ra file CSV để chỉnh sửa bằng Excel/Google Sheets. (Hỗ trợ lọc theo Tag)
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <select id="exportTagSelect"
+            style="flex:1; min-width:200px; padding:10px; border-radius:6px; background:#121218; border:1px solid #2a2a38; color:#eee">
+            <option value="">-- Tất cả truyện --</option>
+          </select>
+          <button onclick="exportCsv()"
+            style="padding:10px 20px; background:#40a090; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer">
+            ⬇️ Tải xuống CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Import Section -->
+      <div class="data-section" style="background:#1a1a24; padding:20px; border-radius:12px; border:1px solid #2a2a38">
+        <h4 style="color:#e0a050; margin-bottom:15px; border-bottom:1px solid #2a2a38; padding-bottom:10px">📥 Import &
+          Cập nhật (CSV)</h4>
+        <p style="color:#909098; font-size:0.9rem; margin-bottom:15px">
+          Cập nhật Standard Tags cho truyện từ file CSV. File cần có cột <code>ID</code> và <code>StandardTags</code>
+          (các tag phân tách bằng dấu chấm phẩy <code>;</code>).
+        </p>
+
+        <div style="margin-bottom:15px; background:#121218; padding:15px; border-radius:8px; border:1px dashed #404050">
+          <input type="file" id="importCsvFile" accept=".csv" style="color:#eee">
+        </div>
+
+        <div id="importPreview"
+          style="display:none; margin-bottom:15px; padding:15px; background:#1e1e28; border-radius:8px; border:1px solid #40a090; color:#b0b0b8; font-size:0.9rem">
+          <!-- Preview info -->
+        </div>
+
+        <button onclick="handleImport()" id="btnImportAction" disabled
+          style="width:100%; padding:12px; background:#2a2a38; color:#666; border:none; border-radius:6px; font-weight:600; cursor:not-allowed">
+          Cập nhật dữ liệu
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -4090,6 +4144,145 @@
       }
     });
 
+    // ============= DATA TOOLS =============
+    async function loadExportOptions() {
+      const select = document.getElementById('exportTagSelect');
+      if (select.options.length > 2) return; // Loaded
+
+      // Ensure Tags are loaded
+      if (Object.keys(allTags).length === 0) {
+        await loadTags();
+      }
+
+      select.innerHTML = '<option value="">-- Tất cả truyện --</option>';
+      Object.keys(allTags).forEach(cat => {
+        const group = document.createElement('optgroup');
+        group.label = cat;
+
+        if (allTags[cat].tags) {
+          allTags[cat].tags.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.name;
+            opt.textContent = t.name;
+            group.appendChild(opt);
+          });
+        }
+        select.appendChild(group);
+      });
+    }
+
+    function exportCsv() {
+      const tag = document.getElementById('exportTagSelect').value;
+      const url = API + '/novels/export' + (tag ? `?tag=${encodeURIComponent(tag)}` : '');
+      if (!adminToken) { showToast('Cần đăng nhập!'); return; }
+      window.open(url, '_blank');
+    }
+
+    let importData = [];
+    const importFileEl = document.getElementById('importCsvFile');
+    if (importFileEl) {
+      importFileEl.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (evt) {
+          parseImportCsv(evt.target.result);
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    function parseImportCsv(text) {
+      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+      const headers = lines[0].split(',');
+
+      const idIdx = headers.findIndex(h => h.trim().toLowerCase().replace(/"/g, '') === 'id');
+      const tagIdx = headers.findIndex(h => h.trim().toLowerCase().replace(/"/g, '') === 'standardtags');
+
+      if (idIdx === -1 || tagIdx === -1) {
+        showToast('Lỗi CSV: Thiếu cột "ID" hoặc "StandardTags"', true);
+        return;
+      }
+
+      importData = [];
+      // Simple CSV parser for quoted fields
+      const parseRow = (row) => {
+        const cells = [];
+        let current = '';
+        let inQuote = false;
+        for (let i = 0; i < row.length; i++) {
+          const c = row[i];
+          if (c === '"') { inQuote = !inQuote; continue; }
+          if (c === ',' && !inQuote) {
+            cells.push(current); current = '';
+          } else {
+            current += c;
+          }
+        }
+        cells.push(current);
+        return cells;
+      };
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = parseRow(lines[i]);
+        if (cols[idIdx]) {
+          const id = cols[idIdx].trim();
+          const tagStr = cols[tagIdx] || '';
+          const tags = tagStr.split(';').map(t => t.trim()).filter(Boolean);
+          if (id) importData.push({ _id: id, standardTags: tags });
+        }
+      }
+
+      const preview = document.getElementById('importPreview');
+      if (preview) {
+        preview.style.display = 'block';
+        preview.innerHTML = `✅ Đã đọc dữ liệu: <b>${importData.length}</b> dòng.<br>Sẵn sàng cập nhật.`;
+      }
+
+      const btn = document.getElementById('btnImportAction');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.background = '#e0a050';
+        btn.style.color = '#121218';
+        btn.style.cursor = 'pointer';
+      }
+    }
+
+    async function handleImport() {
+      if (importData.length === 0) return;
+      if (!confirm(`Bạn có chắc muốn cập nhật tags cho ${importData.length} truyện?`)) return;
+
+      const btn = document.getElementById('btnImportAction');
+      btn.textContent = 'Đang xử lý...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(API + '/novels/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
+          body: JSON.stringify({ items: importData })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast(`Thành công! Đã cập nhật ${data.data.updated} truyện.`);
+          document.getElementById('importCsvFile').value = '';
+          document.getElementById('importPreview').style.display = 'none';
+          btn.style.background = '#2a2a38';
+          btn.textContent = 'Cập nhật dữ liệu';
+          importData = [];
+        } else {
+          showToast('Lỗi: ' + data.error, true);
+          btn.disabled = false;
+          btn.textContent = 'Thử lại';
+        }
+      } catch (err) {
+        showToast('Lỗi kết nối: ' + err.message, true);
+        btn.disabled = false;
+      }
+    }
+
     // Override switchTab to load reports when switching to reports tab
     const originalSwitchTab = typeof switchTab === 'function' ? switchTab : null;
     function switchTab(tabName) {
@@ -4097,27 +4290,24 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-      // Add active to selected tab
-      const btn = document.querySelector(`.tab-btn[onclick*="${tabName}"]`);
-      if (btn) btn.classList.add('active');
+      // Add active to selected tab (find button by index is risky, find by onclick matches)
+      const buttons = document.querySelectorAll('.tab-btn');
+      // Simple mapping because onclick contains the string
+      buttons.forEach(btn => {
+        if (btn.getAttribute('onclick')?.includes(`'${tabName}'`)) {
+          btn.classList.add('active');
+        }
+      });
 
       const content = document.getElementById('tab-' + tabName);
       if (content) content.classList.add('active');
 
-      // Load reports when switching to reports tab
-      if (tabName === 'reports') {
-        loadReports();
-      }
+      if (tabName === 'reports') loadReports();
+      if (tabName === 'tags') loadTagDictionary();
+      if (tabName === 'notice') loadNotice();
+      if (tabName === 'tools') loadExportOptions();
 
-      // Load tag dictionary when switching to tags tab
-      if (tabName === 'tags') {
-        loadTagDictionary();
-      }
-
-      // Load notice when switching to notice tab
-      if (tabName === 'notice') {
-        loadNotice();
-      }
+      localStorage.setItem('activeTab', tabName);
     }
 
     // Init

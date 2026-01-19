@@ -1241,8 +1241,101 @@ module.exports = {
   updateNotice,
   // Helper
   analyzeTagsText,
-  bulkAddTagToNovels
+  bulkAddTagToNovels,
+  exportNovelsCsv,
+  bulkUpdateNovels
 };
+
+/**
+ * GET /api/admin/export-novels
+ * Export novels to CSV
+ * Query: ?tag=TagName
+ */
+async function exportNovelsCsv(req, res) {
+  try {
+    const { tag } = req.query;
+    const query = {};
+
+    if (tag) {
+      query.standardTags = tag;
+    }
+
+    const novels = await Novel.find(query).select('_id title standardTags rawTags').lean();
+
+    // Generate CSV Header
+    let csv = 'ID,Title,StandardTags,RawTags\n';
+
+    // Generate CSV Rows
+    novels.forEach(novel => {
+      // Escape generic CSV characters
+      const title = (novel.title || '').replace(/"/g, '""');
+      const stdTags = (novel.standardTags || []).join('; '); // Use semicolon to separate tags
+      const rawTags = (novel.rawTags || []).join('; ').replace(/"/g, '""');
+
+      csv += `"${novel._id}","${title}","${stdTags}","${rawTags}"\n`;
+    });
+
+    // Set headers for download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=novels_export_${tag || 'all'}_${Date.now()}.csv`);
+
+    return res.send(csv);
+
+  } catch (error) {
+    console.error('[Admin] exportNovelsCsv error:', error);
+    return res.status(500).send('Internal Server Error');
+  }
+}
+
+/**
+ * POST /api/admin/import-novels
+ * Bulk update novels from imported data
+ * Body: { items: [{ _id, standardTags: ["tag1", "tag2"] }] }
+ */
+async function bulkUpdateNovels(req, res) {
+  try {
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, error: 'No data to import' });
+    }
+
+    let updatedCount = 0;
+    const errors = [];
+
+    // Process in batches/parallel
+    // Sử dụng loop để update từng cái hoặc bulkWrite của MongoDB
+    const operations = items.map(item => {
+      if (!item._id || !Array.isArray(item.standardTags)) return null;
+
+      return {
+        updateOne: {
+          filter: { _id: item._id },
+          update: { $set: { standardTags: item.standardTags } }
+        }
+      };
+    }).filter(Boolean);
+
+    if (operations.length > 0) {
+      const result = await Novel.bulkWrite(operations);
+      updatedCount = result.modifiedCount;
+    }
+
+    console.log(`[Admin] Imported/Updated ${updatedCount} novels.`);
+
+    return res.json({
+      success: true,
+      data: {
+        updated: updatedCount,
+        total: items.length
+      }
+    });
+
+  } catch (error) {
+    console.error('[Admin] bulkUpdateNovels error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+}
 
 /**
  * POST /api/admin/tags/bulk-add-novels
