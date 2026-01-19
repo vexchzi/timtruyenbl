@@ -1,19 +1,30 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Quản lý Tags</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #121218;
       color: #e0e0e8;
       min-height: 100vh;
     }
-    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-    
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
     /* Header */
     .header {
       display: flex;
@@ -23,14 +34,19 @@
       flex-wrap: wrap;
       gap: 10px;
     }
-    .header h1 { color: #e8a0b8; font-size: 1.5rem; }
-    
+
+    .header h1 {
+      color: #e8a0b8;
+      font-size: 1.5rem;
+    }
+
     /* Auth */
     .auth-section {
       display: flex;
       gap: 10px;
       align-items: center;
     }
+
     .auth-section input {
       padding: 8px 12px;
       border: 1px solid #2a2a38;
@@ -39,6 +55,7 @@
       color: #e0e0e8;
       width: 200px;
     }
+
     .auth-section button {
       padding: 8px 16px;
       border: none;
@@ -47,9 +64,16 @@
       color: #fff;
       cursor: pointer;
     }
-    .auth-section button:hover { background: #d07090; }
-    .auth-status { font-size: 0.85rem; color: #60c0b0; }
-    
+
+    .auth-section button:hover {
+      background: #d07090;
+    }
+
+    .auth-status {
+      font-size: 0.85rem;
+      color: #60c0b0;
+    }
+
     /* Filters */
     .filters {
       display: flex;
@@ -57,7 +81,9 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-    .filters input, .filters select {
+
+    .filters input,
+    .filters select {
       padding: 10px 14px;
       border: 1px solid #2a2a38;
       border-radius: 8px;
@@ -65,9 +91,16 @@
       color: #e0e0e8;
       font-size: 0.95rem;
     }
-    .filters input { flex: 1; min-width: 200px; }
-    .filters select { min-width: 150px; }
-    
+
+    .filters input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .filters select {
+      min-width: 150px;
+    }
+
     /* Stats */
     .stats {
       display: flex;
@@ -76,8 +109,13 @@
       font-size: 0.9rem;
       color: #a0a0b0;
     }
-    .stats span { background: #1a1a24; padding: 6px 12px; border-radius: 6px; }
-    
+
+    .stats span {
+      background: #1a1a24;
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+
     /* Table */
     .table-wrapper {
       overflow-x: auto;
@@ -85,16 +123,20 @@
       border-radius: 12px;
       margin-bottom: 20px;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.9rem;
     }
-    th, td {
+
+    th,
+    td {
       padding: 12px 10px;
       text-align: left;
       border-bottom: 1px solid #252530;
     }
+
     th {
       background: #121218;
       color: #e8a0b8;
@@ -102,20 +144,27 @@
       position: sticky;
       top: 0;
     }
-    tr:hover { background: #1e1e28; }
-    
+
+    tr:hover {
+      background: #1e1e28;
+    }
+
     .novel-title {
       max-width: 300px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .novel-title a {
       color: #60c0b0;
       text-decoration: none;
     }
-    .novel-title a:hover { text-decoration: underline; }
-    
+
+    .novel-title a:hover {
+      text-decoration: underline;
+    }
+
     .author {
       max-width: 150px;
       overflow: hidden;
@@ -123,7 +172,7 @@
       white-space: nowrap;
       color: #909098;
     }
-    
+
     .source-badge {
       font-size: 0.75rem;
       padding: 2px 8px;
@@ -131,9 +180,12 @@
       background: #252530;
       color: #a0a0a8;
     }
-    
+
     /* Tags */
-    .tags-cell { min-width: 300px; }
+    .tags-cell {
+      min-width: 300px;
+    }
+
     .tag {
       display: inline-block;
       padding: 3px 8px;
@@ -144,10 +196,21 @@
       color: #c8c8d0;
       cursor: pointer;
     }
-    .tag:hover { background: #c06080; color: #fff; }
-    .tag.selected { background: #40a090; color: #fff; }
-    .tag.remove { background: #c05050; }
-    
+
+    .tag:hover {
+      background: #c06080;
+      color: #fff;
+    }
+
+    .tag.selected {
+      background: #40a090;
+      color: #fff;
+    }
+
+    .tag.remove {
+      background: #c05050;
+    }
+
     /* Edit Mode */
     .edit-btn {
       padding: 4px 10px;
@@ -158,9 +221,17 @@
       cursor: pointer;
       font-size: 0.8rem;
     }
-    .edit-btn:hover { background: #60c0b0; color: #121218; }
-    .edit-btn.saving { opacity: 0.5; pointer-events: none; }
-    
+
+    .edit-btn:hover {
+      background: #60c0b0;
+      color: #121218;
+    }
+
+    .edit-btn.saving {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
     .tag-editor {
       display: none;
       margin-top: 8px;
@@ -168,7 +239,11 @@
       background: #121218;
       border-radius: 8px;
     }
-    .tag-editor.active { display: block; }
+
+    .tag-editor.active {
+      display: block;
+    }
+
     .tag-editor input {
       width: 100%;
       padding: 8px;
@@ -178,22 +253,29 @@
       background: #1a1a24;
       color: #e0e0e8;
     }
+
     .tag-options {
       max-height: 200px;
       overflow-y: auto;
       margin-bottom: 10px;
     }
-    .tag-category { margin-bottom: 8px; }
+
+    .tag-category {
+      margin-bottom: 8px;
+    }
+
     .tag-category-name {
       font-size: 0.75rem;
       color: #909098;
       margin-bottom: 4px;
       text-transform: uppercase;
     }
+
     .editor-actions {
       display: flex;
       gap: 8px;
     }
+
     .editor-actions button {
       padding: 6px 12px;
       border: none;
@@ -201,9 +283,17 @@
       cursor: pointer;
       font-size: 0.85rem;
     }
-    .btn-save { background: #40a090; color: #fff; }
-    .btn-cancel { background: #404050; color: #c0c0c8; }
-    
+
+    .btn-save {
+      background: #40a090;
+      color: #fff;
+    }
+
+    .btn-cancel {
+      background: #404050;
+      color: #c0c0c8;
+    }
+
     /* Pagination */
     .pagination {
       display: flex;
@@ -212,6 +302,7 @@
       gap: 10px;
       margin-top: 20px;
     }
+
     .pagination button {
       padding: 8px 16px;
       border: 1px solid #2a2a38;
@@ -220,17 +311,28 @@
       color: #e0e0e8;
       cursor: pointer;
     }
-    .pagination button:hover:not(:disabled) { background: #40a090; color: #fff; }
-    .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
-    .pagination span { color: #909098; }
-    
+
+    .pagination button:hover:not(:disabled) {
+      background: #40a090;
+      color: #fff;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .pagination span {
+      color: #909098;
+    }
+
     /* Loading */
     .loading {
       text-align: center;
       padding: 40px;
       color: #909098;
     }
-    
+
     /* Toast */
     .toast {
       position: fixed;
@@ -245,9 +347,17 @@
       opacity: 0;
       transition: all 0.3s;
     }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.error { background: #c05050; color: #fff; }
-    
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.error {
+      background: #c05050;
+      color: #fff;
+    }
+
     /* Auto-tag Panel */
     .auto-tag-panel {
       background: #16161e;
@@ -260,34 +370,43 @@
       gap: 20px;
       flex-wrap: wrap;
     }
+
     .auto-tag-stats {
       display: flex;
       gap: 15px;
       flex-wrap: wrap;
     }
+
     .auto-tag-stat {
       text-align: center;
       padding: 8px 16px;
       background: #1a1a24;
       border-radius: 8px;
     }
+
     .auto-tag-stat .value {
       font-size: 1.5rem;
       font-weight: bold;
       color: #60c0b0;
     }
+
     .auto-tag-stat .label {
       font-size: 0.75rem;
       color: #909098;
       margin-top: 2px;
     }
-    .auto-tag-stat.warning .value { color: #e0a050; }
+
+    .auto-tag-stat.warning .value {
+      color: #e0a050;
+    }
+
     .auto-tag-actions {
       display: flex;
       gap: 10px;
       align-items: center;
       margin-left: auto;
     }
+
     .auto-tag-actions select {
       padding: 10px 14px;
       border: 1px solid #2a2a38;
@@ -295,6 +414,7 @@
       background: #1a1a24;
       color: #e0e0e8;
     }
+
     .btn-auto-tag {
       padding: 12px 24px;
       border: none;
@@ -308,13 +428,34 @@
       gap: 8px;
       transition: all 0.2s;
     }
-    .btn-auto-tag:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(192, 96, 128, 0.3); }
-    .btn-auto-tag:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .btn-auto-tag.running { animation: pulse 1.5s infinite; }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+
+    .btn-auto-tag:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(192, 96, 128, 0.3);
     }
+
+    .btn-auto-tag:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-auto-tag.running {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.7;
+      }
+    }
+
     .btn-dry-run {
       padding: 10px 16px;
       border: 1px solid #60c0b0;
@@ -323,8 +464,11 @@
       color: #60c0b0;
       cursor: pointer;
     }
-    .btn-dry-run:hover { background: #60c0b022; }
-    
+
+    .btn-dry-run:hover {
+      background: #60c0b022;
+    }
+
     /* Tag Audit Panel */
     .tag-audit-panel {
       background: #16161e;
@@ -333,6 +477,7 @@
       padding: 16px 20px;
       margin-bottom: 20px;
     }
+
     .tag-audit-header {
       display: flex;
       align-items: center;
@@ -340,17 +485,20 @@
       margin-bottom: 15px;
       flex-wrap: wrap;
     }
+
     .tag-audit-header h3 {
       color: #e0a050;
       font-size: 1rem;
       margin: 0;
     }
+
     .tag-audit-controls {
       display: flex;
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
     }
+
     .tag-audit-controls select {
       padding: 8px 12px;
       border: 1px solid #2a2a38;
@@ -359,6 +507,7 @@
       color: #e0e0e8;
       min-width: 200px;
     }
+
     .btn-audit {
       padding: 8px 16px;
       border: 1px solid #e0a050;
@@ -367,13 +516,22 @@
       color: #e0a050;
       cursor: pointer;
     }
-    .btn-audit:hover { background: #e0a05022; }
-    .btn-audit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-audit:hover {
+      background: #e0a05022;
+    }
+
+    .btn-audit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .audit-results {
       max-height: 400px;
       overflow-y: auto;
       margin-top: 15px;
     }
+
     .audit-item {
       display: flex;
       align-items: center;
@@ -383,8 +541,16 @@
       margin-bottom: 8px;
       gap: 12px;
     }
-    .audit-item:hover { background: #1e1e28; }
-    .audit-item .novel-info { flex: 1; min-width: 0; }
+
+    .audit-item:hover {
+      background: #1e1e28;
+    }
+
+    .audit-item .novel-info {
+      flex: 1;
+      min-width: 0;
+    }
+
     .audit-item .novel-title {
       color: #60c0b0;
       font-weight: 500;
@@ -392,11 +558,13 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
     .audit-item .novel-tags {
       font-size: 0.8rem;
       color: #909098;
       margin-top: 4px;
     }
+
     .audit-item .novel-desc {
       font-size: 0.75rem;
       color: #707078;
@@ -404,11 +572,13 @@
       max-height: 40px;
       overflow: hidden;
     }
+
     .audit-actions {
       display: flex;
       gap: 6px;
       flex-shrink: 0;
     }
+
     .btn-remove-tag {
       padding: 6px 12px;
       border: none;
@@ -418,7 +588,11 @@
       cursor: pointer;
       font-size: 0.8rem;
     }
-    .btn-remove-tag:hover { background: #d06060; }
+
+    .btn-remove-tag:hover {
+      background: #d06060;
+    }
+
     .btn-keep-tag {
       padding: 6px 12px;
       border: 1px solid #60c0b0;
@@ -428,7 +602,11 @@
       cursor: pointer;
       font-size: 0.8rem;
     }
-    .btn-keep-tag:hover { background: #60c0b022; }
+
+    .btn-keep-tag:hover {
+      background: #60c0b022;
+    }
+
     .audit-stats {
       display: flex;
       gap: 15px;
@@ -436,8 +614,13 @@
       font-size: 0.85rem;
       color: #909098;
     }
-    .audit-stats span { background: #1a1a24; padding: 4px 10px; border-radius: 4px; }
-    
+
+    .audit-stats span {
+      background: #1a1a24;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
     /* Fanfic detection */
     .btn-convert-fanfic {
       padding: 6px 12px;
@@ -448,7 +631,11 @@
       cursor: pointer;
       font-size: 0.8rem;
     }
-    .btn-convert-fanfic:hover { background: #9070b0; }
+
+    .btn-convert-fanfic:hover {
+      background: #9070b0;
+    }
+
     .fanfic-indicator {
       display: inline-block;
       padding: 2px 6px;
@@ -456,10 +643,22 @@
       font-size: 0.7rem;
       margin-left: 8px;
     }
-    .fanfic-indicator.high { background: #8060a0; color: #fff; }
-    .fanfic-indicator.medium { background: #c08040; color: #fff; }
-    .fanfic-indicator.low { background: #4080c0; color: #fff; }
-    
+
+    .fanfic-indicator.high {
+      background: #8060a0;
+      color: #fff;
+    }
+
+    .fanfic-indicator.medium {
+      background: #c08040;
+      color: #fff;
+    }
+
+    .fanfic-indicator.low {
+      background: #4080c0;
+      color: #fff;
+    }
+
     /* Tabs */
     .tabs {
       display: flex;
@@ -468,6 +667,7 @@
       border-bottom: 2px solid #252530;
       padding-bottom: 10px;
     }
+
     .tab-btn {
       padding: 10px 20px;
       border: none;
@@ -477,28 +677,58 @@
       cursor: pointer;
       font-size: 0.95rem;
     }
-    .tab-btn:hover { color: #e0e0e8; }
-    .tab-btn.active { background: #c06080; color: #fff; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    
+
+    .tab-btn:hover {
+      color: #e0e0e8;
+    }
+
+    .tab-btn.active {
+      background: #c06080;
+      color: #fff;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
     /* Tag Management */
-    .tag-manager { display: flex; gap: 20px; flex-wrap: wrap; }
+    .tag-manager {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
     .tag-create-section {
       flex: 0 0 350px;
       background: #16161e;
       padding: 20px;
       border-radius: 12px;
     }
-    .tag-create-section h3 { color: #e8a0b8; margin-bottom: 15px; font-size: 1rem; }
-    .tag-form-group { margin-bottom: 15px; }
+
+    .tag-create-section h3 {
+      color: #e8a0b8;
+      margin-bottom: 15px;
+      font-size: 1rem;
+    }
+
+    .tag-form-group {
+      margin-bottom: 15px;
+    }
+
     .tag-form-group label {
       display: block;
       color: #909098;
       font-size: 0.85rem;
       margin-bottom: 5px;
     }
-    .tag-form-group input, .tag-form-group select, .tag-form-group textarea {
+
+    .tag-form-group input,
+    .tag-form-group select,
+    .tag-form-group textarea {
       width: 100%;
       padding: 10px;
       border: 1px solid #2a2a38;
@@ -507,7 +737,12 @@
       color: #e0e0e8;
       font-size: 0.9rem;
     }
-    .tag-form-group textarea { resize: vertical; min-height: 60px; }
+
+    .tag-form-group textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
     .btn-create-tag {
       width: 100%;
       padding: 12px;
@@ -518,33 +753,50 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .btn-create-tag:hover { background: #50b0a0; }
-    
+
+    .btn-create-tag:hover {
+      background: #50b0a0;
+    }
+
     .tag-list-section {
       flex: 1;
       min-width: 400px;
     }
-    .tag-list-section h3 { color: #e8a0b8; margin-bottom: 15px; font-size: 1rem; }
+
+    .tag-list-section h3 {
+      color: #e8a0b8;
+      margin-bottom: 15px;
+      font-size: 1rem;
+    }
+
     .tag-list-filters {
       display: flex;
       gap: 10px;
       margin-bottom: 15px;
       flex-wrap: wrap;
     }
-    .tag-list-filters input, .tag-list-filters select {
+
+    .tag-list-filters input,
+    .tag-list-filters select {
       padding: 8px 12px;
       border: 1px solid #2a2a38;
       border-radius: 6px;
       background: #1a1a24;
       color: #e0e0e8;
     }
-    .tag-list-filters input { flex: 1; min-width: 200px; }
+
+    .tag-list-filters input {
+      flex: 1;
+      min-width: 200px;
+    }
+
     .tag-list {
       background: #16161e;
       border-radius: 12px;
       max-height: 500px;
       overflow-y: auto;
     }
+
     .tag-list-item {
       display: flex;
       align-items: center;
@@ -552,8 +804,17 @@
       border-bottom: 1px solid #252530;
       gap: 10px;
     }
-    .tag-list-item:hover { background: #1e1e28; }
-    .tag-list-item .tag-name { flex: 1; color: #60c0b0; font-weight: 500; }
+
+    .tag-list-item:hover {
+      background: #1e1e28;
+    }
+
+    .tag-list-item .tag-name {
+      flex: 1;
+      color: #60c0b0;
+      font-weight: 500;
+    }
+
     .tag-list-item .tag-category {
       font-size: 0.75rem;
       padding: 2px 8px;
@@ -561,8 +822,17 @@
       background: #252530;
       color: #a0a0a8;
     }
-    .tag-list-item .tag-count { color: #909098; font-size: 0.85rem; }
-    .tag-list-item .tag-actions { display: flex; gap: 5px; }
+
+    .tag-list-item .tag-count {
+      color: #909098;
+      font-size: 0.85rem;
+    }
+
+    .tag-list-item .tag-actions {
+      display: flex;
+      gap: 5px;
+    }
+
     .tag-list-item .tag-actions button {
       padding: 4px 8px;
       border: none;
@@ -570,23 +840,42 @@
       cursor: pointer;
       font-size: 0.75rem;
     }
-    .btn-edit-tag { background: #40a090; color: #fff; }
-    .btn-delete-tag { background: #c05050; color: #fff; }
-    
+
+    .btn-edit-tag {
+      background: #40a090;
+      color: #fff;
+    }
+
+    .btn-delete-tag {
+      background: #c05050;
+      color: #fff;
+    }
+
     /* Edit Tag Modal */
-    .edit-tag-form { margin-top: 15px; }
-    
+    .edit-tag-form {
+      margin-top: 15px;
+    }
+
     /* Modal */
     .modal-overlay {
       display: none;
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
       z-index: 1000;
       overflow-y: auto;
       padding: 20px;
     }
-    .modal-overlay.active { display: flex; justify-content: center; align-items: flex-start; }
+
+    .modal-overlay.active {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
     .modal {
       background: #16161e;
       border-radius: 16px;
@@ -596,6 +885,7 @@
       overflow: hidden;
       border: 1px solid #252530;
     }
+
     .modal-header {
       background: #121218;
       padding: 16px 20px;
@@ -603,35 +893,62 @@
       justify-content: space-between;
       align-items: center;
     }
-    .modal-header h2 { color: #e8a0b8; font-size: 1.1rem; margin: 0; }
-    .modal-close {
-      background: none; border: none;
-      color: #909098; font-size: 1.5rem;
-      cursor: pointer; padding: 0;
+
+    .modal-header h2 {
+      color: #e8a0b8;
+      font-size: 1.1rem;
+      margin: 0;
     }
-    .modal-close:hover { color: #e0e0e8; }
-    .modal-body { padding: 20px; }
-    
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #909098;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .modal-close:hover {
+      color: #e0e0e8;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
     /* Novel Info in Modal */
-    .novel-info { margin-bottom: 20px; }
-    .novel-info-title { 
-      color: #60c0b0; 
-      font-size: 1.2rem; 
+    .novel-info {
+      margin-bottom: 20px;
+    }
+
+    .novel-info-title {
+      color: #60c0b0;
+      font-size: 1.2rem;
       margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .novel-info-title a { color: inherit; text-decoration: none; }
-    .novel-info-title a:hover { text-decoration: underline; }
-    .novel-info-meta { 
-      color: #909098; 
-      font-size: 0.85rem; 
+
+    .novel-info-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .novel-info-title a:hover {
+      text-decoration: underline;
+    }
+
+    .novel-info-meta {
+      color: #909098;
+      font-size: 0.85rem;
       margin-bottom: 12px;
       display: flex;
       gap: 15px;
       flex-wrap: wrap;
     }
+
     .novel-info-desc {
       background: #121218;
       padding: 12px;
@@ -643,7 +960,7 @@
       line-height: 1.5;
       margin-bottom: 15px;
     }
-    
+
     /* Raw Tags Section */
     .raw-tags-section {
       background: #121218;
@@ -651,12 +968,14 @@
       border-radius: 8px;
       margin-bottom: 15px;
     }
+
     .raw-tags-section h4 {
       color: #909098;
       font-size: 0.8rem;
       text-transform: uppercase;
       margin-bottom: 8px;
     }
+
     .raw-tag {
       display: inline-block;
       padding: 3px 8px;
@@ -666,14 +985,18 @@
       background: #252530;
       color: #a0a0a8;
     }
-    
+
     /* Tag Editor in Modal */
-    .modal-tag-editor { margin-top: 15px; }
+    .modal-tag-editor {
+      margin-top: 15px;
+    }
+
     .modal-tag-editor h4 {
       color: #e8a0b8;
       font-size: 0.9rem;
       margin-bottom: 10px;
     }
+
     .modal-tag-search {
       width: 100%;
       padding: 10px 14px;
@@ -684,11 +1007,13 @@
       font-size: 0.95rem;
       margin-bottom: 10px;
     }
+
     .modal-tag-options {
       max-height: 250px;
       overflow-y: auto;
       margin-bottom: 15px;
     }
+
     .modal-selected-tags {
       background: #121218;
       padding: 12px;
@@ -696,17 +1021,20 @@
       margin-bottom: 15px;
       min-height: 50px;
     }
+
     .modal-selected-tags h4 {
       color: #60c0b0;
       font-size: 0.8rem;
       text-transform: uppercase;
       margin-bottom: 8px;
     }
+
     .modal-actions {
       display: flex;
       gap: 10px;
       justify-content: flex-end;
     }
+
     .modal-actions button {
       padding: 10px 24px;
       border: none;
@@ -715,11 +1043,25 @@
       font-size: 0.95rem;
       font-weight: 500;
     }
-    .modal-btn-save { background: #40a090; color: #fff; }
-    .modal-btn-save:hover { background: #50b0a0; }
-    .modal-btn-cancel { background: #404050; color: #c0c0c8; }
-    .modal-btn-cancel:hover { background: #505060; }
-    
+
+    .modal-btn-save {
+      background: #40a090;
+      color: #fff;
+    }
+
+    .modal-btn-save:hover {
+      background: #50b0a0;
+    }
+
+    .modal-btn-cancel {
+      background: #404050;
+      color: #c0c0c8;
+    }
+
+    .modal-btn-cancel:hover {
+      background: #505060;
+    }
+
     /* Recrawl button */
     .btn-recrawl {
       padding: 6px 12px;
@@ -733,21 +1075,43 @@
       align-items: center;
       gap: 5px;
     }
-    .btn-recrawl:hover { background: #e0a05022; }
-    .btn-recrawl:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-recrawl.running { animation: pulse 1s infinite; }
-    .missing-data { color: #e8a0b8; font-style: italic; }
+
+    .btn-recrawl:hover {
+      background: #e0a05022;
+    }
+
+    .btn-recrawl:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-recrawl.running {
+      animation: pulse 1s infinite;
+    }
+
+    .missing-data {
+      color: #e8a0b8;
+      font-style: italic;
+    }
+
     /* Login Overlay */
     .login-overlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background: #121218;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 9999;
     }
-    .login-overlay.hidden { display: none; }
+
+    .login-overlay.hidden {
+      display: none;
+    }
+
     .login-box {
       background: #1a1a24;
       border: 1px solid #2a2a38;
@@ -757,8 +1121,18 @@
       max-width: 400px;
       width: 100%;
     }
-    .login-box h2 { color: #e8a0b8; margin-bottom: 10px; }
-    .login-box p { color: #909098; margin-bottom: 25px; font-size: 0.9rem; }
+
+    .login-box h2 {
+      color: #e8a0b8;
+      margin-bottom: 10px;
+    }
+
+    .login-box p {
+      color: #909098;
+      margin-bottom: 25px;
+      font-size: 0.9rem;
+    }
+
     .login-box input {
       width: 100%;
       padding: 14px;
@@ -769,6 +1143,7 @@
       font-size: 1rem;
       margin-bottom: 15px;
     }
+
     .login-box button {
       width: 100%;
       padding: 14px;
@@ -780,22 +1155,247 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .login-box button:hover { background: #d07090; }
-    .login-box .error { color: #e06060; font-size: 0.85rem; margin-top: 10px; display: none; }
-    .login-box .error.show { display: block; }
-    
+
+    .login-box button:hover {
+      background: #d07090;
+    }
+
+    .login-box .error {
+      color: #e06060;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .login-box .error.show {
+      display: block;
+    }
+
     /* Main content hidden by default */
-    .main-content { display: none; }
-    .main-content.visible { display: block; }
+    .main-content {
+      display: none;
+    }
+
+    .main-content.visible {
+      display: block;
+    }
+
+    /* Report Tab Styles */
+    .report-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      margin-left: 6px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      border-radius: 9px;
+      background: #e0a050;
+      color: #121218;
+    }
+
+    .report-stats-panel {
+      background: #16161e;
+      border: 1px solid #252530;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .report-list {
+      background: #16161e;
+      border-radius: 12px;
+      min-height: 200px;
+    }
+
+    .report-item {
+      display: flex;
+      gap: 15px;
+      padding: 16px 20px;
+      border-bottom: 1px solid #252530;
+      transition: background 0.2s;
+    }
+
+    .report-item:last-child {
+      border-bottom: none;
+    }
+
+    .report-item:hover {
+      background: #1e1e28;
+    }
+
+    .report-item-cover {
+      width: 60px;
+      height: 80px;
+      border-radius: 6px;
+      background: #252530;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .report-item-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .report-item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .report-item-title {
+      font-weight: 600;
+      color: #60c0b0;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .report-item-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .report-item-title a:hover {
+      text-decoration: underline;
+    }
+
+    .report-status-badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .report-status-pending {
+      background: #e0a050;
+      color: #121218;
+    }
+
+    .report-status-reviewed {
+      background: #6080c0;
+      color: #fff;
+    }
+
+    .report-status-resolved {
+      background: #40a090;
+      color: #fff;
+    }
+
+    .report-status-rejected {
+      background: #c05050;
+      color: #fff;
+    }
+
+    .report-item-meta {
+      font-size: 0.8rem;
+      color: #909098;
+      margin-bottom: 8px;
+    }
+
+    .report-item-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .report-wrong-tag {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #c05050;
+      color: #fff;
+    }
+
+    .report-current-tag {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #252530;
+      color: #a0a0a8;
+    }
+
+    .report-item-reason {
+      font-size: 0.85rem;
+      color: #b0b0b8;
+      padding: 8px 12px;
+      background: #1a1a24;
+      border-radius: 6px;
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    .report-item-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-report-action {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-report-edit {
+      background: #60c0b0;
+      color: #121218;
+    }
+
+    .btn-report-edit:hover {
+      background: #70d0c0;
+    }
+
+    .btn-report-resolve {
+      background: #40a090;
+      color: #fff;
+    }
+
+    .btn-report-resolve:hover {
+      background: #50b0a0;
+    }
+
+    .btn-report-reject {
+      background: #404050;
+      color: #c0c0c8;
+    }
+
+    .btn-report-reject:hover {
+      background: #505060;
+    }
+
+    .btn-report-delete {
+      background: #c05050;
+      color: #fff;
+    }
+
+    .btn-report-delete:hover {
+      background: #d06060;
+    }
   </style>
 </head>
+
 <body>
   <!-- Login Overlay -->
   <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
       <h2>Admin Panel</h2>
       <p>Nhap Admin Token de truy cap</p>
-      <input type="password" id="loginTokenInput" placeholder="Admin Token..." onkeypress="if(event.key==='Enter') verifyAndLogin()">
+      <input type="password" id="loginTokenInput" placeholder="Admin Token..."
+        onkeypress="if(event.key==='Enter') verifyAndLogin()">
       <button onclick="verifyAndLogin()">Dang nhap</button>
       <div class="error" id="loginError">Token khong hop le</div>
     </div>
@@ -809,13 +1409,18 @@
         <span class="auth-status" id="authStatus"></span>
       </div>
     </div>
-    
+
     <!-- Tabs -->
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('novels')">Quản lý Truyện</button>
       <button class="tab-btn" onclick="switchTab('tags')">Quản lý Tags</button>
+      <button class="tab-btn" onclick="switchTab('reports')" id="tabBtnReports">
+        Báo cáo Tag
+        <span id="reportBadge" class="report-badge" style="display:none">0</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('notice')">Thông báo Web</button>
     </div>
-    
+
     <!-- Tab: Novels -->
     <div class="tab-content active" id="tab-novels">
       <!-- Auto-tag Panel -->
@@ -853,12 +1458,14 @@
           <button class="btn-auto-tag" id="btnAutoTag" onclick="runAutoTag(false)">
             Auto Tag
           </button>
-          <button class="btn-auto-tag" id="btnRetagAll" onclick="runRetagAll()" style="background:linear-gradient(135deg, #e0a050 0%, #c08030 100%);" title="Re-tag TẤT CẢ truyện (kể cả đã có tag)">
+          <button class="btn-auto-tag" id="btnRetagAll" onclick="runRetagAll()"
+            style="background:linear-gradient(135deg, #e0a050 0%, #c08030 100%);"
+            title="Re-tag TẤT CẢ truyện (kể cả đã có tag)">
             Re-tag All
           </button>
         </div>
       </div>
-      
+
       <!-- Tag Audit Panel -->
       <div class="tag-audit-panel">
         <div class="tag-audit-header">
@@ -868,36 +1475,42 @@
               <option value="">-- Chọn tag cần kiểm tra --</option>
             </select>
             <button class="btn-audit" onclick="runTagAudit(1)">Kiểm tra</button>
-            <button class="btn-audit" onclick="quickScanAudit()" style="border-color:#e8a0b8;color:#e8a0b8" title="Quét nhanh 100 truyện, đánh dấu những truyện nghi ngờ gắn nhầm">Quét nhanh</button>
-            <button class="btn-audit" onclick="detectFanfics()" style="border-color:#8060a0;color:#8060a0" title="Tìm fanfic trong danh sách Đam Mỹ (tên ghép, nhóm nhạc...)">Tìm Fanfic</button>
+            <button class="btn-audit" onclick="quickScanAudit()" style="border-color:#e8a0b8;color:#e8a0b8"
+              title="Quét nhanh 100 truyện, đánh dấu những truyện nghi ngờ gắn nhầm">Quét nhanh</button>
+            <button class="btn-audit" onclick="detectFanfics()" style="border-color:#8060a0;color:#8060a0"
+              title="Tìm fanfic trong danh sách Đam Mỹ (tên ghép, nhóm nhạc...)">Tìm Fanfic</button>
           </div>
         </div>
         <!-- Keyword Search -->
         <div class="tag-audit-header" style="margin-top:12px;padding-top:12px;border-top:1px solid #3a3a5a">
           <h3 style="color:#60c0b0">Tìm theo từ khóa</h3>
           <div class="tag-audit-controls">
-            <input type="text" id="keywordSearchInput" placeholder="Nhập từ khóa (VD: xuyên không, trùng sinh...)" style="min-width:300px;padding:8px 12px;border:1px solid #444;border-radius:6px;background:#2a2a4a;color:#fff">
-            <select id="keywordSearchIn" style="padding:8px 12px;border:1px solid #444;border-radius:6px;background:#2a2a4a;color:#fff">
+            <input type="text" id="keywordSearchInput" placeholder="Nhập từ khóa (VD: xuyên không, trùng sinh...)"
+              style="min-width:300px;padding:8px 12px;border:1px solid #444;border-radius:6px;background:#2a2a4a;color:#fff">
+            <select id="keywordSearchIn"
+              style="padding:8px 12px;border:1px solid #444;border-radius:6px;background:#2a2a4a;color:#fff">
               <option value="all">Tìm trong tất cả</option>
               <option value="description">Chỉ mô tả</option>
               <option value="rawTags">Chỉ rawTags</option>
               <option value="title">Chỉ tiêu đề</option>
               <option value="noTag">Chưa có tag chứa từ khóa</option>
             </select>
-            <button class="btn-audit" onclick="searchByKeyword()" style="border-color:#60c0b0;color:#60c0b0">Tìm</button>
+            <button class="btn-audit" onclick="searchByKeyword()"
+              style="border-color:#60c0b0;color:#60c0b0">Tìm</button>
           </div>
         </div>
         <div id="auditResults" style="display:none">
           <div class="audit-stats" id="auditStats"></div>
           <div class="audit-results" id="auditResultsList"></div>
-          <div class="audit-pagination" id="auditPagination" style="display:flex;justify-content:center;gap:10px;margin-top:15px;padding-top:15px;border-top:1px solid #2a2a4a">
+          <div class="audit-pagination" id="auditPagination"
+            style="display:flex;justify-content:center;gap:10px;margin-top:15px;padding-top:15px;border-top:1px solid #2a2a4a">
             <button class="btn-audit" onclick="auditPrevPage()" id="auditPrevBtn">← Trước</button>
             <span id="auditPageInfo" style="padding:8px 16px;background:#2a2a4a;border-radius:6px">Trang 1/1</span>
             <button class="btn-audit" onclick="auditNextPage()" id="auditNextBtn">Sau →</button>
           </div>
         </div>
       </div>
-      
+
       <div class="filters">
         <input type="text" id="searchInput" placeholder="Tìm theo tên truyện, tác giả..." onkeyup="debounceSearch()">
         <select id="sourceFilter" onchange="loadNovels()">
@@ -918,9 +1531,9 @@
           <option value="title">Tên A-Z</option>
         </select>
       </div>
-      
+
       <div class="stats" id="stats"></div>
-      
+
       <div class="table-wrapper">
         <table>
           <thead>
@@ -934,18 +1547,20 @@
             </tr>
           </thead>
           <tbody id="novelList">
-            <tr><td colspan="6" class="loading">Đang tải...</td></tr>
+            <tr>
+              <td colspan="6" class="loading">Đang tải...</td>
+            </tr>
           </tbody>
         </table>
       </div>
-      
+
       <div class="pagination">
         <button onclick="prevPage()" id="prevBtn">← Trước</button>
         <span id="pageInfo">Trang 1</span>
         <button onclick="nextPage()" id="nextBtn">Sau →</button>
       </div>
     </div>
-    
+
     <!-- Tab: Tag Management -->
     <div class="tab-content" id="tab-tags">
       <div class="tag-manager">
@@ -987,7 +1602,7 @@
           </div>
           <button class="btn-create-tag" onclick="createNewTag()">Tạo Tag</button>
         </div>
-        
+
         <!-- Tag List -->
         <div class="tag-list-section">
           <h3>Danh sách Tags (TagDictionary)</h3>
@@ -1015,10 +1630,98 @@
         </div>
       </div>
     </div>
+
+    <!-- Tab: Reports -->
+    <div class="tab-content" id="tab-reports">
+      <div class="report-stats-panel">
+        <div class="auto-tag-stats">
+          <div class="auto-tag-stat warning">
+            <div class="value" id="reportStatPending">-</div>
+            <div class="label">Chờ xử lý</div>
+          </div>
+          <div class="auto-tag-stat">
+            <div class="value" id="reportStatReviewed">-</div>
+            <div class="label">Đã xem</div>
+          </div>
+          <div class="auto-tag-stat" style="background:#40a09022">
+            <div class="value" id="reportStatResolved" style="color:#40a090">-</div>
+            <div class="label">Đã xử lý</div>
+          </div>
+          <div class="auto-tag-stat">
+            <div class="value" id="reportStatRejected">-</div>
+            <div class="label">Từ chối</div>
+          </div>
+          <div class="auto-tag-stat">
+            <div class="value" id="reportStatTotal">-</div>
+            <div class="label">Tổng</div>
+          </div>
+        </div>
+        <div class="auto-tag-actions">
+          <select id="reportStatusFilter" onchange="loadReports()">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="pending" selected>Chờ xử lý</option>
+            <option value="reviewed">Đã xem</option>
+            <option value="resolved">Đã xử lý</option>
+            <option value="rejected">Từ chối</option>
+          </select>
+          <button class="btn-auto-tag" onclick="loadReports()" style="padding:10px 16px">
+            🔄 Làm mới
+          </button>
+        </div>
+      </div>
+
+      <div class="report-list" id="reportList">
+        <div style="padding:40px;text-align:center;color:#909098">Đang tải báo cáo...</div>
+      </div>
+
+      <div class="pagination" id="reportPagination" style="display:none">
+        <button onclick="reportPrevPage()" id="reportPrevBtn">← Trước</button>
+        <span id="reportPageInfo">Trang 1</span>
+        <button onclick="reportNextPage()" id="reportNextBtn">Sau →</button>
+      </div>
+    </div>
+
+    <!-- Tab: Notice -->
+    <div class="tab-content" id="tab-notice">
+      <div class="report-stats-panel" style="flex-direction:column;align-items:stretch">
+        <h3 style="color:#e8a0b8;margin-bottom:15px;font-size:1.1rem">📢 Quản lý Thông báo Web</h3>
+
+        <div style="margin-bottom:15px">
+          <label style="display:block;color:#909098;font-size:0.85rem;margin-bottom:5px">Tiêu đề thông báo:</label>
+          <input type="text" id="noticeTitle" placeholder="VD: Thông báo"
+            style="width:100%;padding:10px;border:1px solid #2a2a38;border-radius:8px;background:#121218;color:#e0e0e8;font-size:0.95rem">
+        </div>
+
+        <div style="margin-bottom:15px">
+          <label style="display:block;color:#909098;font-size:0.85rem;margin-bottom:5px">Nội dung (hỗ trợ HTML):</label>
+          <textarea id="noticeContent" rows="8"
+            placeholder="Nhập nội dung thông báo tại đây... Có thể sử dụng HTML: <b>in đậm</b>, <i>in nghiêng</i>, <a href='...'>link</a>"
+            style="width:100%;padding:10px;border:1px solid #2a2a38;border-radius:8px;background:#121218;color:#e0e0e8;font-size:0.95rem;resize:vertical;font-family:inherit"></textarea>
+        </div>
+
+        <div style="margin-bottom:20px;display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="noticeActive" style="width:18px;height:18px">
+          <label for="noticeActive" style="color:#e0e0e8;font-size:0.95rem;cursor:pointer">Bật thông báo (hiển thị trên
+            trang chủ)</label>
+        </div>
+
+        <div style="display:flex;gap:10px">
+          <button onclick="loadNotice()" class="btn-auto-tag" style="flex:1;background:#404050">🔄 Tải lại</button>
+          <button onclick="saveNotice()" class="btn-auto-tag" style="flex:2">💾 Lưu thông báo</button>
+        </div>
+
+        <div id="noticePreview" style="margin-top:20px;display:none">
+          <label style="display:block;color:#909098;font-size:0.85rem;margin-bottom:8px">Xem trước:</label>
+          <div id="noticePreviewContent"
+            style="background:#1a1a24;border:1px solid #2a2a38;border-radius:8px;padding:15px;color:#b0b0b8;font-size:0.9rem;white-space:pre-wrap;line-height:1.6">
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  
+
   <div class="toast" id="toast"></div>
-  
+
   <!-- Edit Modal -->
   <div class="modal-overlay" id="editModal">
     <div class="modal">
@@ -1044,22 +1747,22 @@
           </div>
           <div class="novel-info-desc" id="modalNovelDesc">Mô tả truyện...</div>
         </div>
-        
+
         <div class="raw-tags-section">
           <h4>Tags gốc (từ nguồn)</h4>
           <div id="modalRawTags">-</div>
         </div>
-        
+
         <div class="modal-tag-editor">
           <h4>Chọn Standard Tags</h4>
           <input type="text" class="modal-tag-search" placeholder="Tìm tag..." oninput="filterModalTags(this.value)">
           <div class="modal-tag-options" id="modalTagOptions"></div>
-          
+
           <div class="modal-selected-tags">
             <h4>Tags đã chọn</h4>
             <div id="modalSelectedTags"><span style="color:#666">Chưa chọn tag nào</span></div>
           </div>
-          
+
           <div class="modal-actions">
             <button class="modal-btn-cancel" onclick="closeModal()">Huỷ</button>
             <button class="modal-btn-save" onclick="saveModalTags()">Lưu tags</button>
@@ -1083,41 +1786,41 @@
     let searchTimeout = null;
     let editingNovelId = null;
     let editingTags = new Set();
-    
+
     // API
     const API = '/api';
-    
+
     async function api(endpoint, options = {}) {
       const headers = { 'Content-Type': 'application/json' };
       if (adminToken) headers['X-Admin-Token'] = adminToken;
-      
+
       const res = await fetch(API + endpoint, { ...options, headers });
       return res.json();
     }
-    
+
     // Auth - Login
     async function verifyAndLogin() {
       const token = document.getElementById('loginTokenInput').value.trim();
       const errorEl = document.getElementById('loginError');
-      
+
       if (!token) {
         errorEl.textContent = 'Vui long nhap token';
         errorEl.classList.add('show');
         return;
       }
-      
+
       errorEl.classList.remove('show');
-      
+
       try {
         // Test token by calling a protected endpoint
         const res = await fetch(API + '/admin/novels/stats', {
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
-            'X-Admin-Token': token 
+            'X-Admin-Token': token
           }
         });
         const data = await res.json();
-        
+
         if (data.success) {
           // Token valid
           adminToken = token;
@@ -1134,49 +1837,49 @@
         errorEl.classList.add('show');
       }
     }
-    
+
     function logout() {
       adminToken = '';
       isAuthenticated = false;
       localStorage.removeItem('adminToken');
       hideMainContent();
     }
-    
+
     function showMainContent() {
       document.getElementById('loginOverlay').classList.add('hidden');
       document.getElementById('mainContent').classList.add('visible');
     }
-    
+
     function hideMainContent() {
       document.getElementById('loginOverlay').classList.remove('hidden');
       document.getElementById('mainContent').classList.remove('visible');
       document.getElementById('loginTokenInput').value = '';
     }
-    
+
     // Check saved token on load
     async function checkSavedToken() {
       if (adminToken) {
         try {
           const res = await fetch(API + '/admin/novels/stats', {
-            headers: { 
+            headers: {
               'Content-Type': 'application/json',
-              'X-Admin-Token': adminToken 
+              'X-Admin-Token': adminToken
             }
           });
           const data = await res.json();
-          
+
           if (data.success) {
             isAuthenticated = true;
             showMainContent();
             loadInitialData();
             return;
           }
-        } catch (err) {}
+        } catch (err) { }
       }
       // Token invalid or not saved
       hideMainContent();
     }
-    
+
     // Load data - use admin API to get all tags from TagDictionary
     async function loadTags() {
       const data = await api('/admin/tags');
@@ -1185,12 +1888,12 @@
         allTags = {};
         const tagFilter = document.getElementById('tagFilter');
         tagFilter.innerHTML = '<option value="">Tất cả tags</option>';
-        
+
         for (const tag of data.data.tags) {
           const cat = tag.category || 'other';
           const tagName = tag.standardTag || tag.tag;
           if (!tagName) continue;
-          
+
           if (!allTags[cat]) {
             allTags[cat] = { name: cat, tags: [] };
           }
@@ -1199,14 +1902,14 @@
         }
       }
     }
-    
+
     async function loadNovels() {
       const search = document.getElementById('searchInput').value.trim();
       const source = document.getElementById('sourceFilter').value;
       const tag = document.getElementById('tagFilter').value;
       const noTag = document.getElementById('noTagFilter').value;
       const sort = document.getElementById('sortFilter').value;
-      
+
       let url = `/novels?page=${currentPage}&limit=${limit}`;
       if (search) url += `&search=${encodeURIComponent(search)}`;
       if (source) url += `&source=${encodeURIComponent(source)}`;
@@ -1214,16 +1917,16 @@
       if (noTag === 'no') url += `&noTags=true`;
       if (noTag === 'yes') url += `&hasTags=true`;
       if (sort) url += `&sort=${sort}`;
-      
+
       document.getElementById('novelList').innerHTML = '<tr><td colspan="6" class="loading">Đang tải...</td></tr>';
-      
+
       const data = await api(url);
-      
+
       if (data.success) {
         novels = data.data.novels || [];
         totalNovels = data.data.pagination?.total || novels.length;
         totalPages = data.data.pagination?.pages || 1;
-        
+
         // Get sources
         if (allSources.length === 0 && data.data.sources) {
           allSources = data.data.sources;
@@ -1233,25 +1936,25 @@
             sourceFilter.innerHTML += `<option value="${s}">${s}</option>`;
           }
         }
-        
+
         renderNovels();
         updateStats();
         updatePagination();
       }
     }
-    
+
     function renderNovels() {
       const tbody = document.getElementById('novelList');
-      
+
       if (novels.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="loading">Không có truyện nào</td></tr>';
         return;
       }
-      
+
       tbody.innerHTML = novels.map((novel, idx) => {
         const tags = novel.standardTags || [];
         const num = (currentPage - 1) * limit + idx + 1;
-        
+
         return `
           <tr data-id="${novel._id}">
             <td>${num}</td>
@@ -1273,34 +1976,34 @@
         `;
       }).join('');
     }
-    
+
     function updateStats() {
       document.getElementById('stats').innerHTML = `
         <span>Tổng: ${totalNovels.toLocaleString()} truyện</span>
         <span>Trang ${currentPage}/${totalPages}</span>
       `;
     }
-    
+
     function updatePagination() {
       document.getElementById('pageInfo').textContent = `Trang ${currentPage} / ${totalPages}`;
       document.getElementById('prevBtn').disabled = currentPage <= 1;
       document.getElementById('nextBtn').disabled = currentPage >= totalPages;
     }
-    
+
     function prevPage() {
       if (currentPage > 1) {
         currentPage--;
         loadNovels();
       }
     }
-    
+
     function nextPage() {
       if (currentPage < totalPages) {
         currentPage++;
         loadNovels();
       }
     }
-    
+
     function debounceSearch() {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
@@ -1308,7 +2011,7 @@
         loadNovels();
       }, 300);
     }
-    
+
     // Edit tags - Open Modal
     function startEdit(novelId) {
       editingNovelId = novelId;
@@ -1321,9 +2024,9 @@
         showToast('Không tìm thấy truyện!', true);
         return;
       }
-      
+
       editingTags = new Set(novel.standardTags || []);
-      
+
       // Populate modal with novel info
       document.getElementById('modalNovelTitle').textContent = novel.title;
       document.getElementById('modalNovelTitle').href = novel.originalLink || '#';
@@ -1332,25 +2035,25 @@
       document.getElementById('modalNovelChapters').textContent = novel.chapterCount || 0;
       document.getElementById('modalNovelReads').textContent = (novel.readCount || 0).toLocaleString();
       const hasDesc = novel.description && novel.description.trim().length > 0;
-      document.getElementById('modalNovelDesc').innerHTML = hasDesc 
-        ? novel.description 
+      document.getElementById('modalNovelDesc').innerHTML = hasDesc
+        ? novel.description
         : '<span class="missing-data">⚠️ Không có mô tả - Bấm "Crawl lại" để lấy dữ liệu</span>';
-      
+
       // Show raw tags
       const rawTags = novel.rawTags || [];
-      document.getElementById('modalRawTags').innerHTML = rawTags.length 
+      document.getElementById('modalRawTags').innerHTML = rawTags.length
         ? rawTags.map(t => `<span class="raw-tag">#${t}</span>`).join('')
         : '<span style="color:#666">Không có tags gốc</span>';
-      
+
       // Render tag options
       renderModalTags('');
       renderModalSelectedTags();
-      
+
       // Show modal
       document.getElementById('editModal').classList.add('active');
       document.body.style.overflow = 'hidden';
     }
-    
+
     function closeModal() {
       document.getElementById('editModal').classList.remove('active');
       document.body.style.overflow = '';
@@ -1358,54 +2061,54 @@
       editingTags.clear();
       document.querySelector('.modal-tag-search').value = '';
     }
-    
+
     function renderModalTags(filter) {
       const container = document.getElementById('modalTagOptions');
       let html = '';
-      
+
       const categoryNames = {
         type: 'Thể loại', ending: 'Kết thúc', era: 'Thời đại', world: 'Thế giới',
         setting: 'Bối cảnh', genre: 'Phong cách', plot: 'Xu hướng',
         relationship: 'Mối quan hệ', couple: 'Couple', character: 'Nhân vật',
         content: 'Nội dung', other: 'Khác'
       };
-      
+
       const categoryOrder = ['type', 'ending', 'era', 'world', 'setting', 'genre', 'plot', 'relationship', 'couple', 'character', 'content', 'other'];
-      
+
       for (const cat of categoryOrder) {
         const catData = allTags[cat];
         if (!catData) continue;
-        
+
         // Handle both structures: array or {name, tags: [...]}
         const tags = Array.isArray(catData) ? catData : (catData.tags || []);
         if (!Array.isArray(tags) || tags.length === 0) continue;
-        
+
         const filtered = tags.filter(t => {
           const tagName = t.tag || t.name;
           return tagName && (!filter || tagName.toLowerCase().includes(filter.toLowerCase()));
         });
-        
+
         if (filtered.length === 0) continue;
-        
+
         const catDisplayName = catData.name || categoryNames[cat] || cat;
-        
+
         html += `<div class="tag-category">
           <div class="tag-category-name">${catDisplayName}</div>
           ${filtered.map(t => {
-            const tagName = t.tag || t.name;
-            const selected = editingTags.has(tagName);
-            return `<span class="tag ${selected ? 'selected' : ''}" onclick="toggleModalTag('${tagName}')">${tagName}</span>`;
-          }).join('')}
+          const tagName = t.tag || t.name;
+          const selected = editingTags.has(tagName);
+          return `<span class="tag ${selected ? 'selected' : ''}" onclick="toggleModalTag('${tagName}')">${tagName}</span>`;
+        }).join('')}
         </div>`;
       }
-      
+
       container.innerHTML = html || '<div style="color:#666;padding:10px">Không tìm thấy tag</div>';
     }
-    
+
     function filterModalTags(filter) {
       renderModalTags(filter);
     }
-    
+
     function toggleModalTag(tag) {
       if (editingTags.has(tag)) {
         editingTags.delete(tag);
@@ -1415,55 +2118,55 @@
       renderModalTags(document.querySelector('.modal-tag-search').value);
       renderModalSelectedTags();
     }
-    
+
     function renderModalSelectedTags() {
       const container = document.getElementById('modalSelectedTags');
       if (editingTags.size === 0) {
         container.innerHTML = '<span style="color:#666">Chưa chọn tag nào</span>';
       } else {
-        container.innerHTML = Array.from(editingTags).map(t => 
+        container.innerHTML = Array.from(editingTags).map(t =>
           `<span class="tag selected" onclick="toggleModalTag('${t}')">${t} ×</span>`
         ).join('');
       }
     }
-    
+
     // Re-crawl novel to get fresh data
     async function recrawlNovel() {
       if (!adminToken) {
         showToast('Cần nhập Admin Token!', true);
         return;
       }
-      
+
       if (!editingNovelId) return;
-      
+
       const novel = novels.find(n => n._id === editingNovelId);
       if (!novel) return;
-      
+
       if (!novel.originalLink) {
         showToast('Truyện không có link nguồn gốc!', true);
         return;
       }
-      
+
       const btn = document.getElementById('btnRecrawl');
       btn.disabled = true;
       btn.classList.add('running');
       btn.innerHTML = 'Đang crawl...';
-      
+
       try {
         const data = await api(`/admin/novels/${editingNovelId}/recrawl`, {
           method: 'POST'
         });
-        
+
         if (data.success) {
           showToast('✅ Đã crawl lại thành công!');
-          
+
           // Update local novel data
           const updatedNovel = data.data.novel;
           const idx = novels.findIndex(n => n._id === editingNovelId);
           if (idx >= 0) {
             novels[idx] = { ...novels[idx], ...updatedNovel };
           }
-          
+
           // Update modal display
           if (updatedNovel.description) {
             document.getElementById('modalNovelDesc').textContent = updatedNovel.description;
@@ -1474,20 +2177,20 @@
           if (updatedNovel.chapterCount) {
             document.getElementById('modalNovelChapters').textContent = updatedNovel.chapterCount;
           }
-          
+
           // Update raw tags
           const rawTags = updatedNovel.rawTags || [];
-          document.getElementById('modalRawTags').innerHTML = rawTags.length 
+          document.getElementById('modalRawTags').innerHTML = rawTags.length
             ? rawTags.map(t => `<span class="raw-tag">#${t}</span>`).join('')
             : '<span style="color:#666">Không có tags gốc</span>';
-          
+
           // If new standard tags were extracted, update the selection
           if (updatedNovel.standardTags && updatedNovel.standardTags.length > 0) {
             editingTags = new Set(updatedNovel.standardTags);
             renderModalTags('');
             renderModalSelectedTags();
           }
-          
+
         } else {
           showToast(data.message || data.error || 'Lỗi khi crawl', true);
         }
@@ -1499,34 +2202,34 @@
         btn.innerHTML = 'Crawl lại';
       }
     }
-    
+
     async function saveModalTags() {
       if (!adminToken) {
         showToast('Cần nhập Admin Token!', true);
         return;
       }
-      
+
       if (!editingNovelId) return;
-      
+
       try {
         const data = await api(`/admin/novels/${editingNovelId}/tags`, {
           method: 'PUT',
           body: JSON.stringify({ standardTags: Array.from(editingTags) })
         });
-        
+
         if (data.success) {
           // Update local state
           const novel = novels.find(n => n._id === editingNovelId);
           if (novel) novel.standardTags = Array.from(editingTags);
-          
+
           // Update display in table
           const tagsDisplay = document.getElementById(`tags-${editingNovelId}`);
           if (tagsDisplay) {
-            tagsDisplay.innerHTML = editingTags.size 
+            tagsDisplay.innerHTML = editingTags.size
               ? Array.from(editingTags).map(t => `<span class="tag">${t}</span>`).join('')
               : '<span style="color:#666">Chưa có tag</span>';
           }
-          
+
           closeModal();
           showToast('Đã lưu tags!');
         } else {
@@ -1536,45 +2239,45 @@
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     // Keep old inline functions for backwards compatibility
-    function cancelEdit(novelId) {}
-    function renderTagOptions(novelId, filter) {}
-    function filterTagOptions(novelId, filter) {}
-    function toggleTag(novelId, tag) {}
-    function renderSelectedTags(novelId) {}
+    function cancelEdit(novelId) { }
+    function renderTagOptions(novelId, filter) { }
+    function filterTagOptions(novelId, filter) { }
+    function toggleTag(novelId, tag) { }
+    function renderSelectedTags(novelId) { }
     async function saveTags(novelId) { startEdit(novelId); }
-    
+
     // ============== TAB SWITCHING ==============
     function switchTab(tabName) {
       // Update buttons
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`).classList.add('active');
-      
+
       // Update content
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
       document.getElementById(`tab-${tabName}`).classList.add('active');
-      
+
       // Load data for tags tab
       if (tabName === 'tags') {
         loadTagDictionary();
       }
     }
-    
+
     // ============== TAG DICTIONARY MANAGEMENT ==============
     let tagDictionary = [];
     let editingTagId = null;
-    
+
     async function loadTagDictionary() {
       const container = document.getElementById('tagDictionaryList');
-      
+
       if (!adminToken) {
         container.innerHTML = '<div style="padding:20px;color:#ff6b9d;text-align:center">⚠️ Cần nhập Admin Token trước!</div>';
         return;
       }
-      
+
       container.innerHTML = '<div style="padding:20px;color:#888;text-align:center">Đang tải...</div>';
-      
+
       try {
         const data = await api('/admin/tags');
         console.log('loadTagDictionary response:', data);
@@ -1590,31 +2293,31 @@
         container.innerHTML = '<div style="padding:20px;color:#ff4757;text-align:center">Lỗi: ' + err.message + '</div>';
       }
     }
-    
+
     function renderTagDictionary() {
       const container = document.getElementById('tagDictionaryList');
       const search = document.getElementById('tagListSearch').value.toLowerCase();
       const category = document.getElementById('tagListCategory').value;
-      
+
       const filtered = tagDictionary.filter(t => {
         if (category && t.category !== category) return false;
-        if (search && !t.standardTag.toLowerCase().includes(search) && 
-            !(t.aliases || []).some(a => a.toLowerCase().includes(search))) return false;
+        if (search && !t.standardTag.toLowerCase().includes(search) &&
+          !(t.aliases || []).some(a => a.toLowerCase().includes(search))) return false;
         return true;
       });
-      
+
       if (filtered.length === 0) {
         container.innerHTML = '<div style="padding:20px;color:#888;text-align:center">Không có tag nào</div>';
         return;
       }
-      
+
       const categoryNames = {
         type: 'Thể loại', ending: 'Kết thúc', era: 'Thời đại', world: 'Thế giới',
         setting: 'Bối cảnh', genre: 'Phong cách', plot: 'Xu hướng',
         relationship: 'Mối quan hệ', couple: 'Couple', character: 'Nhân vật',
         content: 'Nội dung', other: 'Khác'
       };
-      
+
       container.innerHTML = filtered.map(tag => `
         <div class="tag-list-item" data-id="${tag._id}">
           <span class="tag-name">${tag.standardTag}</span>
@@ -1627,23 +2330,23 @@
         </div>
       `).join('');
     }
-    
+
     function filterTagList() {
       renderTagDictionary();
     }
-    
+
     async function createNewTag() {
       const name = document.getElementById('newTagName').value.trim();
       const category = document.getElementById('newTagCategory').value;
       const priority = document.getElementById('newTagPriority').value;
       const aliases = document.getElementById('newTagAliases').value;
       const description = document.getElementById('newTagDesc').value;
-      
+
       if (!name) {
         showToast('Cần nhập tên tag!', true);
         return;
       }
-      
+
       try {
         const data = await api('/admin/tags', {
           method: 'POST',
@@ -1655,7 +2358,7 @@
             description
           })
         });
-        
+
         if (data.success) {
           showToast('Đã tạo tag: ' + name);
           // Clear form
@@ -1672,25 +2375,25 @@
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     function editTag(tagId) {
       const tag = tagDictionary.find(t => t._id === tagId);
       if (!tag) return;
-      
+
       editingTagId = tagId;
-      
+
       // Populate form with existing values
       document.getElementById('newTagName').value = tag.standardTag;
       document.getElementById('newTagCategory').value = tag.category;
       document.getElementById('newTagPriority').value = tag.priority;
       document.getElementById('newTagAliases').value = (tag.aliases || []).join(', ');
       document.getElementById('newTagDesc').value = tag.description || '';
-      
+
       // Change button to "Update"
       const btn = document.querySelector('.btn-create-tag');
       btn.textContent = 'Cập nhật Tag';
       btn.onclick = updateEditingTag;
-      
+
       // Add cancel button if not exists
       if (!document.getElementById('cancelEditBtn')) {
         const cancelBtn = document.createElement('button');
@@ -1702,26 +2405,26 @@
         cancelBtn.onclick = cancelEditTag;
         btn.parentNode.appendChild(cancelBtn);
       }
-      
+
       // Scroll to form
       document.querySelector('.tag-create-section').scrollIntoView({ behavior: 'smooth' });
       showToast('Đang sửa: ' + tag.standardTag);
     }
-    
+
     async function updateEditingTag() {
       if (!editingTagId) return;
-      
+
       const name = document.getElementById('newTagName').value.trim();
       const category = document.getElementById('newTagCategory').value;
       const priority = document.getElementById('newTagPriority').value;
       const aliases = document.getElementById('newTagAliases').value;
       const description = document.getElementById('newTagDesc').value;
-      
+
       if (!name) {
         showToast('Cần nhập tên tag!', true);
         return;
       }
-      
+
       try {
         const data = await api(`/admin/tags/${editingTagId}`, {
           method: 'PUT',
@@ -1733,7 +2436,7 @@
             description
           })
         });
-        
+
         if (data.success) {
           let msg = 'Đã cập nhật tag: ' + name;
           if (data.data?.novelsUpdated > 0) {
@@ -1750,35 +2453,35 @@
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     function cancelEditTag() {
       editingTagId = null;
-      
+
       // Clear form
       document.getElementById('newTagName').value = '';
       document.getElementById('newTagCategory').value = 'type';
       document.getElementById('newTagPriority').value = '5';
       document.getElementById('newTagAliases').value = '';
       document.getElementById('newTagDesc').value = '';
-      
+
       // Reset button
       const btn = document.querySelector('.btn-create-tag');
       btn.textContent = 'Tạo Tag';
       btn.onclick = createNewTag;
-      
+
       // Remove cancel button
       const cancelBtn = document.getElementById('cancelEditBtn');
       if (cancelBtn) cancelBtn.remove();
     }
-    
+
     async function deleteTag(tagId, tagName) {
       if (!confirm(`Xóa tag "${tagName}"?\n\nLưu ý: Tag sẽ bị vô hiệu hóa (soft delete).`)) return;
-      
+
       try {
         const data = await api(`/admin/tags/${tagId}`, {
           method: 'DELETE'
         });
-        
+
         if (data.success) {
           showToast('Đã xóa tag: ' + tagName);
           loadTagDictionary();
@@ -1790,7 +2493,7 @@
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     // Toast
     function showToast(msg, isError = false) {
       const toast = document.getElementById('toast');
@@ -1798,21 +2501,21 @@
       toast.className = 'toast show' + (isError ? ' error' : '');
       setTimeout(() => toast.className = 'toast', 3000);
     }
-    
+
     // ============== DELETE NOVEL ==============
     async function deleteNovel(novelId, title) {
       if (!adminToken) {
         showToast('Cần nhập Admin Token!', true);
         return;
       }
-      
+
       if (!confirm(`Xóa truyện này?\n\n"${title}"\n\nHành động này không thể hoàn tác!`)) {
         return;
       }
-      
+
       try {
         const data = await api(`/admin/novels/${novelId}`, { method: 'DELETE' });
-        
+
         if (data.success) {
           showToast('Đã xóa truyện: ' + title);
           // Remove from local array and re-render
@@ -1828,7 +2531,7 @@
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     // ============== TAG AUDIT ==============
     let auditResults = [];
     let currentAuditTag = '';
@@ -1837,11 +2540,11 @@
     let auditTotalPages = 1;
     let auditTotal = 0;
     const auditPageSize = 100;
-    
+
     async function loadAuditTagOptions() {
       const select = document.getElementById('auditTagSelect');
       select.innerHTML = '<option value="">-- Chọn tag cần kiểm tra --</option>';
-      
+
       // Use allTags which is already loaded
       const categoryOrder = ['type', 'ending', 'era', 'world', 'setting', 'genre', 'plot', 'relationship', 'couple', 'character', 'content', 'other'];
       const categoryNames = {
@@ -1850,17 +2553,17 @@
         relationship: 'Mối quan hệ', couple: 'Couple', character: 'Nhân vật',
         content: 'Nội dung', other: 'Khác'
       };
-      
+
       for (const cat of categoryOrder) {
         const catData = allTags[cat];
         if (!catData) continue;
-        
+
         const tags = Array.isArray(catData) ? catData : (catData.tags || []);
         if (tags.length === 0) continue;
-        
+
         const optgroup = document.createElement('optgroup');
         optgroup.label = categoryNames[cat] || cat;
-        
+
         for (const t of tags) {
           const tagName = t.tag || t.name;
           const count = t.count || 0;
@@ -1871,146 +2574,146 @@
             optgroup.appendChild(option);
           }
         }
-        
+
         select.appendChild(optgroup);
       }
     }
-    
+
     async function runTagAudit(page = 1) {
       const tagName = document.getElementById('auditTagSelect').value;
-      
+
       if (!tagName) {
         showToast('Chọn tag cần kiểm tra!', true);
         return;
       }
-      
+
       if (!adminToken) {
         showToast('Cần nhập Admin Token!', true);
         return;
       }
-      
+
       // Reset if new tag or page 1
       if (currentAuditTag !== tagName || page === 1) {
         markedCorrect.clear();
       }
-      
+
       currentAuditTag = tagName;
       auditPage = page;
-      
+
       try {
         // Fetch novels with this tag
         const data = await api(`/novels?tags=${encodeURIComponent(tagName)}&limit=${auditPageSize}&page=${page}`);
-        
+
         if (!data.success) {
           showToast('Lỗi khi tải dữ liệu', true);
           return;
         }
-        
+
         auditResults = data.data.novels || [];
         auditTotal = data.data.pagination?.total || auditResults.length;
         auditTotalPages = Math.ceil(auditTotal / auditPageSize);
-        
+
         document.getElementById('auditResults').style.display = 'block';
         updateAuditStats();
         renderAuditResults();
         updateAuditPagination();
-        
+
       } catch (err) {
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     function auditPrevPage() {
       if (auditPage > 1) {
         runTagAudit(auditPage - 1);
       }
     }
-    
+
     function auditNextPage() {
       if (auditPage < auditTotalPages) {
         runTagAudit(auditPage + 1);
       }
     }
-    
+
     function updateAuditPagination() {
       document.getElementById('auditPageInfo').textContent = `Trang ${auditPage}/${auditTotalPages} (${auditTotal} truyện)`;
       document.getElementById('auditPrevBtn').disabled = auditPage <= 1;
       document.getElementById('auditNextBtn').disabled = auditPage >= auditTotalPages;
     }
-    
+
     // Quick scan - automatically detect suspicious novels
     async function quickScanAudit() {
       const tagName = document.getElementById('auditTagSelect').value;
-      
+
       if (!tagName) {
         showToast('Chọn tag cần kiểm tra!', true);
         return;
       }
-      
+
       if (!adminToken) {
         showToast('Cần nhập Admin Token!', true);
         return;
       }
-      
+
       currentAuditTag = tagName;
       markedCorrect.clear();
       auditPage = 1;
-      
+
       showToast('Đang quét...');
-      
+
       try {
         // Fetch more novels for quick scan
         const data = await api(`/novels?tags=${encodeURIComponent(tagName)}&limit=100&page=1`);
-        
+
         if (!data.success) {
           showToast('Lỗi khi tải dữ liệu', true);
           return;
         }
-        
+
         const allNovels = data.data.novels || [];
         auditTotal = data.data.pagination?.total || allNovels.length;
         auditTotalPages = Math.ceil(auditTotal / auditPageSize);
-        
+
         // Analyze each novel using precise matching
         const suspicious = [];
         const confirmed = [];
-        
+
         for (const novel of allNovels) {
           const rawTagsStr = (novel.rawTags || []).join(' ');
           const descStr = novel.description || '';
           const titleStr = novel.title || '';
           const allText = `${rawTagsStr} ${descStr} ${titleStr}`;
-          
+
           // Use precise matching function
           const found = isTagFoundInText(tagName, allText);
-          
+
           if (found) {
             confirmed.push(novel);
           } else {
             suspicious.push(novel);
           }
         }
-        
+
         // Show suspicious ones first
         auditResults = [...suspicious, ...confirmed];
-        
+
         // Mark confirmed as correct
         confirmed.forEach(n => markedCorrect.add(n._id));
-        
+
         document.getElementById('auditResults').style.display = 'block';
-        
+
         const msg = `Quét xong: ${suspicious.length} nghi ngờ / ${allNovels.length} truyện. Các truyện nghi ngờ hiển thị trước.`;
         showToast(msg);
-        
+
         updateAuditStats();
         renderAuditResults();
         updateAuditPagination();
-        
+
       } catch (err) {
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     // Helper: normalize string for search (remove Vietnamese tones)
     function normalizeForSearch(str) {
       return str.toLowerCase()
@@ -2019,7 +2722,7 @@
         .replace(/đ/g, 'd')
         .replace(/Đ/g, 'D');
     }
-    
+
     // ============== FANFIC DETECTION ==============
     const FANFIC_PATTERNS = {
       // Couple names (shipped names)
@@ -2072,18 +2775,18 @@
         /\b[A-Z][a-z]{2,}x[A-Z][a-z]{2,}\b/i,  // Name x Name
       ],
     };
-    
+
     function detectFanficScore(novel) {
       let score = 0;
       let reasons = [];
-      
+
       const title = (novel.title || '').toLowerCase();
       const titleOrig = novel.title || '';
       const desc = (novel.description || '').toLowerCase();
       const rawTags = (novel.rawTags || []).map(t => t.toLowerCase());
       const rawTagsStr = rawTags.join(' ');
       const allText = `${title} ${desc} ${rawTagsStr}`;
-      
+
       // Check couple names (high confidence)
       for (const couple of FANFIC_PATTERNS.coupleNames) {
         if (allText.includes(couple)) {
@@ -2092,7 +2795,7 @@
           break; // Only count once
         }
       }
-      
+
       // Check group names
       for (const group of FANFIC_PATTERNS.groupNames) {
         if (allText.includes(group)) {
@@ -2101,7 +2804,7 @@
           break;
         }
       }
-      
+
       // Check keywords
       for (const kw of FANFIC_PATTERNS.keywords) {
         if (allText.includes(kw)) {
@@ -2110,7 +2813,7 @@
           break;
         }
       }
-      
+
       // Check CamelCase name patterns in title
       for (const pattern of FANFIC_PATTERNS.namePatterns) {
         if (pattern.test(titleOrig)) {
@@ -2119,84 +2822,84 @@
           break;
         }
       }
-      
+
       // Check if title has brackets with names (common fanfic pattern)
       if (/\[.+\]/.test(titleOrig) || /【.+】/.test(titleOrig)) {
         score += 10;
         reasons.push('Có [...] trong tên');
       }
-      
+
       // Check for "x" between words in title (common ship notation)
       if (/\b\w+\s*x\s*\w+\b/i.test(title) && !title.includes('1x1')) {
         score += 10;
         reasons.push('Có "x" giữa tên');
       }
-      
+
       return { score, reasons, isFanfic: score >= 25 };
     }
-    
+
     async function detectFanfics() {
       if (!adminToken) {
         showToast('Cần nhập Admin Token!', true);
         return;
       }
-      
+
       currentAuditTag = 'Đam Mỹ';
       markedCorrect.clear();
       auditPage = 1;
-      
+
       showToast('Đang quét tìm fanfic...');
-      
+
       try {
         // Fetch Đam Mỹ novels
         const data = await api(`/novels?tags=${encodeURIComponent('Đam Mỹ')}&limit=200&page=1`);
-        
+
         if (!data.success) {
           showToast('Lỗi khi tải dữ liệu', true);
           return;
         }
-        
+
         const allNovels = data.data.novels || [];
         auditTotal = data.data.pagination?.total || allNovels.length;
         auditTotalPages = Math.ceil(auditTotal / auditPageSize);
-        
+
         // Analyze each novel for fanfic patterns
         const analyzed = allNovels.map(novel => {
           const detection = detectFanficScore(novel);
           return { ...novel, fanficScore: detection.score, fanficReasons: detection.reasons, isFanfic: detection.isFanfic };
         });
-        
+
         // Sort by score (highest first)
         analyzed.sort((a, b) => b.fanficScore - a.fanficScore);
-        
+
         // Filter to show only potential fanfics
         const potentialFanfics = analyzed.filter(n => n.fanficScore >= 15);
         const confirmed = analyzed.filter(n => n.fanficScore < 15);
-        
+
         auditResults = [...potentialFanfics, ...confirmed];
-        
+
         // Auto-mark non-fanfics as correct
         confirmed.forEach(n => markedCorrect.add(n._id));
-        
+
         document.getElementById('auditResults').style.display = 'block';
         document.getElementById('auditTagSelect').value = 'Đam Mỹ';
-        
+
         showToast(`Tìm thấy ${potentialFanfics.length} truyện nghi ngờ là fanfic / ${allNovels.length} truyện Đam Mỹ`);
-        
+
         updateAuditStats();
         renderFanficResults();
         updateAuditPagination();
-        
+
       } catch (err) {
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     function renderFanficResults() {
       const container = document.getElementById('auditResultsList');
-      
+
       const visibleResults = auditResults.filter(n => !markedCorrect.has(n._id));
-      
+
       if (visibleResults.length === 0) {
         container.innerHTML = `
           <div style="color:#4ecdc4;padding:20px;text-align:center">
@@ -2206,16 +2909,16 @@
         `;
         return;
       }
-      
+
       container.innerHTML = visibleResults.map(novel => {
         const otherTags = (novel.standardTags || []).filter(t => t !== 'Đam Mỹ').slice(0, 5);
         const rawTags = (novel.rawTags || []).slice(0, 8);
         const desc = (novel.description || '').substring(0, 150);
         const score = novel.fanficScore || 0;
         const reasons = novel.fanficReasons || [];
-        
+
         let indicatorClass = score >= 40 ? 'high' : score >= 25 ? 'medium' : 'low';
-        
+
         return `
           <div class="audit-item" data-id="${novel._id}" style="${score >= 25 ? 'border-left:3px solid #9b59b6' : ''}">
             <div class="novel-info">
@@ -2243,31 +2946,31 @@
         `;
       }).join('');
     }
-    
+
     async function convertToFanfic(novelId) {
       if (!adminToken) {
         showToast('Cần Admin Token!', true);
         return;
       }
-      
+
       const novel = auditResults.find(n => n._id === novelId);
       if (!novel) return;
-      
+
       // Remove Đam Mỹ, add Fanfic
       let newTags = (novel.standardTags || []).filter(t => t !== 'Đam Mỹ');
       if (!newTags.includes('Fanfic')) {
         newTags.push('Fanfic');
       }
-      
+
       try {
         const data = await api(`/admin/novels/${novelId}/tags`, {
           method: 'PUT',
           body: JSON.stringify({ standardTags: newTags })
         });
-        
+
         if (data.success) {
           showToast(`✅ Đã chuyển "${novel.title.substring(0, 25)}..." sang Fanfic`);
-          
+
           // Remove from list
           auditResults = auditResults.filter(n => n._id !== novelId);
           renderFanficResults();
@@ -2279,7 +2982,7 @@
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     // Helper: get common aliases for a tag (with exclusions)
     function getTagAliases(tagName) {
       const aliasMap = {
@@ -2300,17 +3003,17 @@
         'Hỗ Sủng': { aliases: ['hỗ sủng', 'ho sung', 'hosung', 'hỗ tương sủng'], excludes: [] },
         'Chủ Công': { aliases: ['chủ công', 'chu cong', 'chucong'], excludes: ['hỗ công'] },
       };
-      
+
       const key = Object.keys(aliasMap).find(k => k.toLowerCase() === tagName.toLowerCase());
       return key ? aliasMap[key] : { aliases: [normalizeForSearch(tagName)], excludes: [] };
     }
-    
+
     // Check if tag keyword is found in text (with precise matching)
     function isTagFoundInText(tagName, text) {
       const textLower = text.toLowerCase();
       const textNorm = normalizeForSearch(text);
       const tagInfo = getTagAliases(tagName);
-      
+
       // Check exclusions first - if any exclusion is found, return false
       for (const excl of tagInfo.excludes || []) {
         if (textLower.includes(excl) || textNorm.includes(normalizeForSearch(excl))) {
@@ -2318,11 +3021,11 @@
           // Only return false if ONLY the exclusion is present, not the actual tag
         }
       }
-      
+
       // Check if any alias is found
       for (const alias of tagInfo.aliases || []) {
         const aliasNorm = normalizeForSearch(alias);
-        
+
         // Use word boundary check for short aliases
         if (alias.length <= 3) {
           // For short aliases, require word boundary
@@ -2337,11 +3040,11 @@
           }
         }
       }
-      
+
       // Also check the tag name itself
       const tagLower = tagName.toLowerCase();
       const tagNorm = normalizeForSearch(tagName);
-      
+
       if (textLower.includes(tagLower) || textNorm.includes(tagNorm)) {
         // But verify it's not actually an exclusion
         for (const excl of tagInfo.excludes || []) {
@@ -2359,16 +3062,16 @@
         }
         return true;
       }
-      
+
       return false;
     }
-    
+
     function renderAuditResults() {
       const container = document.getElementById('auditResultsList');
-      
+
       // Filter out novels marked as correct
       const visibleResults = auditResults.filter(n => !markedCorrect.has(n._id));
-      
+
       if (visibleResults.length === 0) {
         container.innerHTML = `
           <div style="color:#4ecdc4;padding:20px;text-align:center">
@@ -2378,46 +3081,46 @@
         `;
         return;
       }
-      
+
       container.innerHTML = visibleResults.map(novel => {
         const otherTags = (novel.standardTags || []).filter(t => t !== currentAuditTag).slice(0, 5);
         const rawTags = (novel.rawTags || []).slice(0, 8);
         const desc = (novel.description || '').substring(0, 150);
-        
+
         // Check if tag keyword is found using precise matching
         const rawStr = rawTags.join(' ');
         const allText = `${rawStr} ${desc}`;
         const found = isTagFoundInText(currentAuditTag, allText);
-        
+
         // Get tag info for highlighting
         const tagInfo = getTagAliases(currentAuditTag);
         const allAliases = [...(tagInfo.aliases || []), currentAuditTag.toLowerCase(), normalizeForSearch(currentAuditTag)];
-        
+
         // Highlight raw tags that match (but not exclusions)
         const highlightedRaw = rawTags.map(t => {
           const tLower = t.toLowerCase();
           const tNorm = normalizeForSearch(t);
-          
+
           // Check if this is an exclusion
-          const isExclusion = (tagInfo.excludes || []).some(excl => 
+          const isExclusion = (tagInfo.excludes || []).some(excl =>
             tLower.includes(excl) || tNorm.includes(normalizeForSearch(excl))
           );
-          
+
           if (isExclusion) {
             return `<span style="color:#ff4757;font-weight:bold" title="Khác với ${currentAuditTag}!">#${t}</span>`;
           }
-          
+
           // Check if matches
-          const isMatch = allAliases.some(alias => 
+          const isMatch = allAliases.some(alias =>
             tLower.includes(alias) || tNorm.includes(normalizeForSearch(alias))
           );
-          
+
           if (isMatch) {
             return `<span style="color:#4ecdc4;font-weight:bold">#${t}</span>`;
           }
           return `#${t}`;
         }).join(' ');
-        
+
         return `
           <div class="audit-item" data-id="${novel._id}" style="${!found ? 'border-left:3px solid #ff4757' : ''}">
             <div class="novel-info">
@@ -2441,7 +3144,7 @@
         `;
       }).join('');
     }
-    
+
     function keepTag(novelId) {
       // Add to marked correct set and re-render
       markedCorrect.add(novelId);
@@ -2449,7 +3152,7 @@
       updateAuditStats();
       showToast('Đã đánh dấu đúng');
     }
-    
+
     function updateAuditStats() {
       const remaining = auditResults.filter(n => !markedCorrect.has(n._id)).length;
       const correctInPage = auditResults.filter(n => markedCorrect.has(n._id)).length;
@@ -2461,27 +3164,27 @@
         <span style="color:#ff6b9d">Cần xem: ${remaining}</span>
       `;
     }
-    
+
     async function removeTagFromNovel(novelId, tagToRemove) {
       if (!adminToken) {
         showToast('Cần Admin Token!', true);
         return;
       }
-      
+
       const novel = auditResults.find(n => n._id === novelId);
       if (!novel) return;
-      
+
       const newTags = (novel.standardTags || []).filter(t => t !== tagToRemove);
-      
+
       try {
         const data = await api(`/admin/novels/${novelId}/tags`, {
           method: 'PUT',
           body: JSON.stringify({ standardTags: newTags })
         });
-        
+
         if (data.success) {
           showToast(`Đã gỡ tag "${tagToRemove}" khỏi "${novel.title.substring(0, 30)}..."`);
-          
+
           // Remove from audit list
           auditResults = auditResults.filter(n => n._id !== novelId);
           renderAuditResults();
@@ -2493,54 +3196,54 @@
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     // ============== KEYWORD SEARCH ==============
     let keywordSearchMode = '';
     let currentKeyword = '';
-    
+
     async function searchByKeyword() {
       const keyword = document.getElementById('keywordSearchInput').value.trim();
       const searchIn = document.getElementById('keywordSearchIn').value;
-      
+
       if (!keyword) {
         showToast('Nhập từ khóa để tìm!', true);
         return;
       }
-      
+
       if (keyword.length < 2) {
         showToast('Từ khóa quá ngắn (tối thiểu 2 ký tự)', true);
         return;
       }
-      
+
       if (!adminToken) {
         showToast('Cần nhập Admin Token!', true);
         return;
       }
-      
+
       currentKeyword = keyword;
       keywordSearchMode = searchIn;
       markedCorrect.clear();
       auditPage = 1;
       currentAuditTag = `"${keyword}"`;
-      
+
       showToast(`Đang tìm "${keyword}"...`);
-      
+
       try {
         // Use dedicated backend API for keyword search
         const url = `/admin/novels/search-keyword?keyword=${encodeURIComponent(keyword)}&searchIn=${searchIn}&limit=500`;
         const data = await api(url);
-        
+
         if (!data.success) {
           showToast(data.message || 'Lỗi khi tìm kiếm', true);
           return;
         }
-        
+
         auditResults = data.data.novels || [];
         auditTotal = data.data.total || auditResults.length;
         auditTotalPages = 1;
-        
+
         document.getElementById('auditResults').style.display = 'block';
-        
+
         const modeLabels = {
           'all': 'tất cả',
           'description': 'mô tả',
@@ -2548,21 +3251,21 @@
           'title': 'tiêu đề',
           'noTag': 'chưa có tag'
         };
-        
-        const msg = auditResults.length < auditTotal 
+
+        const msg = auditResults.length < auditTotal
           ? `Tìm thấy ${auditTotal} truyện, hiển thị ${auditResults.length} (trong ${modeLabels[searchIn]})`
           : `Tìm thấy ${auditTotal} truyện chứa "${keyword}" trong ${modeLabels[searchIn]}`;
         showToast(msg);
-        
+
         updateKeywordSearchStats();
         renderKeywordSearchResults();
         updateAuditPagination();
-        
+
       } catch (err) {
         showToast('Lỗi: ' + err.message, true);
       }
     }
-    
+
     function updateKeywordSearchStats() {
       const remaining = auditResults.filter(n => !markedCorrect.has(n._id)).length;
       const correctInPage = auditResults.filter(n => markedCorrect.has(n._id)).length;
@@ -2581,12 +3284,12 @@
         <span style="color:#ff6b9d">Còn lại: ${remaining}</span>
       `;
     }
-    
+
     function renderKeywordSearchResults() {
       const container = document.getElementById('auditResultsList');
-      
+
       const visibleResults = auditResults.filter(n => !markedCorrect.has(n._id));
-      
+
       if (visibleResults.length === 0) {
         container.innerHTML = `
           <div style="color:#4ecdc4;padding:20px;text-align:center">
@@ -2595,15 +3298,15 @@
         `;
         return;
       }
-      
+
       const keywordLower = currentKeyword.toLowerCase();
       const keywordNorm = normalizeForSearch(currentKeyword);
-      
+
       container.innerHTML = visibleResults.map(novel => {
         const standardTags = (novel.standardTags || []).slice(0, 8);
         const rawTags = (novel.rawTags || []).slice(0, 10);
         const desc = (novel.description || '').substring(0, 200);
-        
+
         // Highlight keyword in rawTags
         const highlightedRaw = rawTags.map(t => {
           const tLower = t.toLowerCase();
@@ -2613,21 +3316,21 @@
           }
           return `#${t}`;
         }).join(' ');
-        
+
         // Highlight keyword in description
         let highlightedDesc = desc;
         if (desc.toLowerCase().includes(keywordLower)) {
           const regex = new RegExp(`(${currentKeyword})`, 'gi');
           highlightedDesc = desc.replace(regex, '<mark style="background:#4ecdc4;color:#000;padding:0 2px;border-radius:2px">$1</mark>');
         }
-        
+
         // Check if keyword is already in standardTags
         const hasTagged = standardTags.some(t => {
           const tLower = t.toLowerCase();
           const tNorm = normalizeForSearch(t);
           return tLower.includes(keywordLower) || tNorm.includes(keywordNorm);
         });
-        
+
         return `
           <div class="audit-item" data-id="${novel._id}" style="${!hasTagged ? 'border-left:3px solid #ffa502' : 'border-left:3px solid #4ecdc4'}">
             <div class="novel-info">
@@ -2650,13 +3353,13 @@
         `;
       }).join('');
     }
-    
+
     function markKeywordDone(novelId) {
       markedCorrect.add(novelId);
       renderKeywordSearchResults();
       updateKeywordSearchStats();
     }
-    
+
     // Allow Enter key to trigger search
     document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
@@ -2668,7 +3371,7 @@
         }
       }, 100);
     });
-    
+
     // ============== AUTO-TAG ==============
     async function loadNovelStats() {
       if (!adminToken) {
@@ -2678,7 +3381,7 @@
         document.getElementById('statPercent').textContent = '-';
         return;
       }
-      
+
       try {
         const data = await api('/admin/novels/stats');
         if (data.success) {
@@ -2691,43 +3394,43 @@
         console.error('loadNovelStats error:', err);
       }
     }
-    
+
     async function runAutoTag(dryRun = false) {
       if (!adminToken) {
         showToast('Cần nhập Admin Token trước!', true);
         return;
       }
-      
+
       const limit = document.getElementById('autoTagLimit').value;
       const btn = document.getElementById('btnAutoTag');
-      
+
       btn.disabled = true;
       btn.classList.add('running');
       btn.innerHTML = dryRun ? 'Đang quét...' : 'Đang xử lý...';
-      
+
       try {
         const data = await api('/admin/novels/auto-tag', {
           method: 'POST',
           body: JSON.stringify({ limit: parseInt(limit), dryRun })
         });
-        
+
         if (data.success) {
           const { processed, tagged, remaining, results } = data.data;
-          
-          let msg = dryRun 
+
+          let msg = dryRun
             ? `[Dry Run] Có thể gắn tag cho ${tagged}/${processed} truyện`
             : `Đã gắn tag cho ${tagged}/${processed} truyện. Còn lại: ${remaining}`;
-          
+
           showToast(msg);
-          
+
           // Show results in console for debugging
           console.log('Auto-tag results:', results);
-          
+
           // Show summary
           if (results && results.length > 0) {
             const withTags = results.filter(r => r.tagsAdded > 0);
             const withoutTags = results.filter(r => r.tagsAdded === 0);
-            
+
             console.log(`✅ Gắn được tag: ${withTags.length} truyện`);
             if (withTags.length > 0) {
               console.table(withTags.slice(0, 10).map(r => ({
@@ -2735,16 +3438,16 @@
                 tags: r.tags?.join(', ')
               })));
             }
-            
+
             console.log(`⚠️ Không tìm được tag: ${withoutTags.length} truyện`);
             if (withoutTags.length > 0) {
               // Group by reason
               const noRawTags = withoutTags.filter(r => r.rawTagsCount === 0);
               const hasRawButNoMatch = withoutTags.filter(r => r.rawTagsCount > 0);
-              
+
               console.log(`   - Không có rawTags: ${noRawTags.length}`);
               console.log(`   - Có rawTags nhưng không khớp: ${hasRawButNoMatch.length}`);
-              
+
               if (hasRawButNoMatch.length > 0) {
                 console.log('\n📋 Mẫu rawTags không khớp (cần thêm vào TagDictionary):');
                 // Collect unique rawTags from unmatched novels
@@ -2753,7 +3456,7 @@
                   (r.rawTagsSample || []).forEach(t => unmatchedRawTags.add(t));
                 });
                 console.log(Array.from(unmatchedRawTags).slice(0, 30).join(', '));
-                
+
                 console.table(hasRawButNoMatch.slice(0, 5).map(r => ({
                   title: r.title?.substring(0, 35),
                   rawTags: (r.rawTagsSample || []).slice(0, 5).join(', ')
@@ -2761,7 +3464,7 @@
               }
             }
           }
-          
+
           // Refresh stats and novel list
           if (!dryRun) {
             await loadNovelStats();
@@ -2778,34 +3481,34 @@
         btn.innerHTML = 'Auto Tag';
       }
     }
-    
+
     // Re-tag ALL novels (including those with existing tags)
     async function runRetagAll() {
       if (!adminToken) {
         showToast('Cần nhập Admin Token trước!', true);
         return;
       }
-      
+
       const totalNovels = document.getElementById('statTotal')?.textContent || '?';
       const confirmMsg = `Bạn có chắc muốn re-tag TẤT CẢ ${totalNovels} truyện?\n\nQuá trình này sẽ mất vài phút.\nTags hiện tại sẽ được ghi đè!`;
       if (!confirm(confirmMsg)) return;
-      
+
       const btn = document.getElementById('btnRetagAll');
       btn.disabled = true;
       btn.classList.add('running');
       btn.innerHTML = 'Đang re-tag TẤT CẢ...';
-      
+
       try {
         const data = await api('/admin/novels/retag-all', {
           method: 'POST',
           body: JSON.stringify({ dryRun: false })
         });
-        
+
         if (data.success) {
           const { processed, updated, unchanged, errors, totalWithRawTags, sampleChanges } = data.data;
-          
+
           showToast(`Hoàn tất! Đã re-tag ${updated}/${processed} truyện (${errors} lỗi)`);
-          
+
           // Show results in console
           console.log('Re-tag results:', data.data);
           if (sampleChanges && sampleChanges.length > 0) {
@@ -2816,7 +3519,7 @@
               removed: (c.removed || []).join(', ')
             })));
           }
-          
+
           // Refresh stats and novel list
           await loadNovelStats();
           await loadNovels();
@@ -2831,25 +3534,326 @@
         btn.innerHTML = 'Re-tag All';
       }
     }
-    
+
     // Load initial data after authentication
     async function loadInitialData() {
       await loadTags();
       await loadNovels();
       await loadNovelStats();
       loadAuditTagOptions();
+      await loadReportStats(); // Load report stats for badge
     }
-    
+
+    // ============== REPORTS MANAGEMENT ==============
+    let reports = [];
+    let reportPage = 1;
+    let reportTotalPages = 1;
+    let reportTotal = 0;
+
+    async function loadReportStats() {
+      try {
+        const data = await api('/admin/reports/stats');
+        if (data.success) {
+          const stats = data.data;
+          document.getElementById('reportStatPending').textContent = stats.pending || 0;
+          document.getElementById('reportStatReviewed').textContent = stats.reviewed || 0;
+          document.getElementById('reportStatResolved').textContent = stats.resolved || 0;
+          document.getElementById('reportStatRejected').textContent = stats.rejected || 0;
+          document.getElementById('reportStatTotal').textContent = stats.total || 0;
+
+          // Update badge
+          const pendingCount = stats.pending || 0;
+          const badge = document.getElementById('reportBadge');
+          if (pendingCount > 0) {
+            badge.textContent = pendingCount > 99 ? '99+' : pendingCount;
+            badge.style.display = 'inline-flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      } catch (err) {
+        console.error('Error loading report stats:', err);
+      }
+    }
+
+    async function loadReports() {
+      const status = document.getElementById('reportStatusFilter').value;
+      const listEl = document.getElementById('reportList');
+      listEl.innerHTML = '<div style="padding:40px;text-align:center;color:#909098">Đang tải báo cáo...</div>';
+
+      try {
+        const data = await api(`/admin/reports?status=${status}&page=${reportPage}&limit=20`);
+        if (data.success) {
+          reports = data.data.reports || [];
+          reportTotal = data.data.pagination.total;
+          reportTotalPages = data.data.pagination.totalPages;
+
+          renderReports();
+          updateReportPagination();
+          await loadReportStats();
+        } else {
+          listEl.innerHTML = '<div style="padding:40px;text-align:center;color:#c05050">Lỗi tải báo cáo</div>';
+        }
+      } catch (err) {
+        listEl.innerHTML = `<div style="padding:40px;text-align:center;color:#c05050">Lỗi: ${err.message}</div>`;
+      }
+    }
+
+    function renderReports() {
+      const listEl = document.getElementById('reportList');
+
+      if (reports.length === 0) {
+        listEl.innerHTML = '<div style="padding:40px;text-align:center;color:#909098">Không có báo cáo nào</div>';
+        document.getElementById('reportPagination').style.display = 'none';
+        return;
+      }
+
+      listEl.innerHTML = reports.map(report => {
+        const novel = report.novelId || {};
+        const coverUrl = novel.coverImage ? `/api/image-proxy?url=${encodeURIComponent(novel.coverImage)}` : '';
+        const statusClass = `report-status-${report.status}`;
+        const statusText = {
+          pending: 'Chờ xử lý',
+          reviewed: 'Đã xem',
+          resolved: 'Đã xử lý',
+          rejected: 'Từ chối'
+        }[report.status] || report.status;
+
+        const wrongTagsHtml = (report.wrongTags || []).map(t =>
+          `<span class="report-wrong-tag">✗ ${t}</span>`
+        ).join('');
+
+        const currentTagsHtml = (novel.standardTags || []).map(t => {
+          const isWrong = (report.wrongTags || []).includes(t);
+          return `<span class="${isWrong ? 'report-wrong-tag' : 'report-current-tag'}">${t}</span>`;
+        }).join('');
+
+        const createdDate = new Date(report.createdAt).toLocaleString('vi-VN');
+
+        return `
+          <div class="report-item" data-id="${report._id}">
+            <div class="report-item-cover">
+              ${coverUrl ? `<img src="${coverUrl}" onerror="this.style.display='none'">` : ''}
+            </div>
+            <div class="report-item-content">
+              <div class="report-item-title">
+                <a href="${novel.originalLink || '#'}" target="_blank">${novel.title || 'Không rõ'}</a>
+                <span class="report-status-badge ${statusClass}">${statusText}</span>
+              </div>
+              <div class="report-item-meta">
+                Báo cáo lúc: ${createdDate}
+                ${report.reportType ? ` • Loại: ${report.reportType === 'wrong_tag' ? 'Tag sai' : report.reportType}` : ''}
+              </div>
+              ${wrongTagsHtml ? `<div style="margin-bottom:6px"><strong style="font-size:0.75rem;color:#c05050">Tags bị báo sai:</strong> ${wrongTagsHtml}</div>` : ''}
+              <div class="report-item-tags">
+                <strong style="font-size:0.75rem;color:#909098;margin-right:6px">Tags hiện tại:</strong>
+                ${currentTagsHtml || '<em style="color:#606068">Không có</em>'}
+              </div>
+              ${report.reason ? `<div class="report-item-reason">"${report.reason}"</div>` : ''}
+              ${report.adminNote ? `<div style="font-size:0.8rem;color:#60c0b0;margin-top:6px">📝 Admin: ${report.adminNote}</div>` : ''}
+            </div>
+            <div class="report-item-actions">
+              ${report.status !== 'resolved' ? `
+                <button class="btn-report-action btn-report-edit" onclick="openEditFromReport('${report._id}', '${novel._id}')">✏️ Sửa tags</button>
+                <button class="btn-report-action btn-report-resolve" onclick="resolveReport('${report._id}')">✓ Đánh dấu xử lý</button>
+              ` : ''}
+              ${report.status === 'pending' ? `
+                <button class="btn-report-action btn-report-reject" onclick="updateReportStatus('${report._id}', 'rejected')">✗ Từ chối</button>
+              ` : ''}
+              <button class="btn-report-action btn-report-delete" onclick="deleteReport('${report._id}')">🗑️ Xoá</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('reportPagination').style.display = 'flex';
+    }
+
+    function updateReportPagination() {
+      document.getElementById('reportPageInfo').textContent = `Trang ${reportPage}/${reportTotalPages} (${reportTotal} báo cáo)`;
+      document.getElementById('reportPrevBtn').disabled = reportPage <= 1;
+      document.getElementById('reportNextBtn').disabled = reportPage >= reportTotalPages;
+    }
+
+    function reportPrevPage() {
+      if (reportPage > 1) {
+        reportPage--;
+        loadReports();
+      }
+    }
+
+    function reportNextPage() {
+      if (reportPage < reportTotalPages) {
+        reportPage++;
+        loadReports();
+      }
+    }
+
+    async function updateReportStatus(reportId, status) {
+      try {
+        const data = await api(`/admin/reports/${reportId}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({ status })
+        });
+
+        if (data.success) {
+          showToast(`Đã cập nhật trạng thái: ${status}`);
+          await loadReports();
+        } else {
+          showToast(data.message || 'Lỗi', true);
+        }
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, true);
+      }
+    }
+
+    async function resolveReport(reportId) {
+      try {
+        const data = await api(`/admin/reports/${reportId}/resolve`, {
+          method: 'POST',
+          body: JSON.stringify({})
+        });
+
+        if (data.success) {
+          showToast('Đã đánh dấu xử lý xong!');
+          await loadReports();
+        } else {
+          showToast(data.message || 'Lỗi', true);
+        }
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, true);
+      }
+    }
+
+    async function deleteReport(reportId) {
+      if (!confirm('Bạn có chắc muốn xoá báo cáo này?')) return;
+
+      try {
+        const data = await api(`/admin/reports/${reportId}`, {
+          method: 'DELETE'
+        });
+
+        if (data.success) {
+          showToast('Đã xoá báo cáo');
+          await loadReports();
+        } else {
+          showToast(data.message || 'Lỗi', true);
+        }
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, true);
+      }
+    }
+
+    async function openEditFromReport(reportId, novelId) {
+      // Just open the modal to edit tags - don't auto-update status
+      // Admin should manually mark as resolved after editing
+      if (novelId) {
+        await openModal(novelId);
+      }
+    }
+
+    // ============== NOTICE MANAGEMENT ==============
+
+    async function loadNotice() {
+      try {
+        const data = await api('/admin/notice');
+        if (data.success && data.data) {
+          const notice = data.data;
+          document.getElementById('noticeTitle').value = notice.title || '';
+          document.getElementById('noticeContent').value = notice.content || '';
+          document.getElementById('noticeActive').checked = notice.isActive || false;
+
+          // Show preview
+          updateNoticePreview();
+        }
+      } catch (err) {
+        console.error('Error loading notice:', err);
+      }
+    }
+
+    async function saveNotice() {
+      const title = document.getElementById('noticeTitle').value.trim();
+      const content = document.getElementById('noticeContent').value;
+      const isActive = document.getElementById('noticeActive').checked;
+
+      try {
+        const data = await api('/admin/notice', {
+          method: 'PUT',
+          body: JSON.stringify({ title, content, isActive })
+        });
+
+        if (data.success) {
+          showToast('Đã lưu thông báo!');
+          updateNoticePreview();
+        } else {
+          showToast(data.message || 'Lỗi', true);
+        }
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, true);
+      }
+    }
+
+    function updateNoticePreview() {
+      const content = document.getElementById('noticeContent').value;
+      const previewDiv = document.getElementById('noticePreview');
+      const previewContent = document.getElementById('noticePreviewContent');
+
+      if (content.trim()) {
+        previewDiv.style.display = 'block';
+        previewContent.innerHTML = content;
+      } else {
+        previewDiv.style.display = 'none';
+      }
+    }
+
+    // Add event listener for preview
+    document.addEventListener('DOMContentLoaded', () => {
+      const contentEl = document.getElementById('noticeContent');
+      if (contentEl) {
+        contentEl.addEventListener('input', updateNoticePreview);
+      }
+    });
+
+    // Override switchTab to load reports when switching to reports tab
+    const originalSwitchTab = typeof switchTab === 'function' ? switchTab : null;
+    function switchTab(tabName) {
+      // Remove active from all tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      // Add active to selected tab
+      const btn = document.querySelector(`.tab-btn[onclick*="${tabName}"]`);
+      if (btn) btn.classList.add('active');
+
+      const content = document.getElementById('tab-' + tabName);
+      if (content) content.classList.add('active');
+
+      // Load reports when switching to reports tab
+      if (tabName === 'reports') {
+        loadReports();
+      }
+
+      // Load tag dictionary when switching to tags tab
+      if (tabName === 'tags') {
+        loadTagDictionary();
+      }
+
+      // Load notice when switching to notice tab
+      if (tabName === 'notice') {
+        loadNotice();
+      }
+    }
+
     // Init
     document.addEventListener('DOMContentLoaded', async () => {
       // Check saved token and authenticate
       await checkSavedToken();
-      
+
       // Close modal on Escape key
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeModal();
       });
-      
+
       // Close modal when clicking outside
       document.getElementById('editModal').addEventListener('click', (e) => {
         if (e.target.classList.contains('modal-overlay')) {
@@ -2859,4 +3863,5 @@
     });
   </script>
 </body>
+
 </html>

@@ -23,21 +23,21 @@ function rateLimiter(maxRequests) {
     const ip = req.ip || req.connection.remoteAddress;
     const key = `${ip}_${req.path}`;
     const now = Date.now();
-    
+
     if (!requestCounts.has(key)) {
       requestCounts.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
       return next();
     }
-    
+
     const record = requestCounts.get(key);
-    
+
     // Reset nếu hết window
     if (now > record.resetAt) {
       record.count = 1;
       record.resetAt = now + RATE_LIMIT_WINDOW;
       return next();
     }
-    
+
     // Check limit
     if (record.count >= maxRequests) {
       return res.status(429).json({
@@ -46,7 +46,7 @@ function rateLimiter(maxRequests) {
         message: 'Bạn đã gửi quá nhiều request. Vui lòng đợi 1 phút.'
       });
     }
-    
+
     record.count++;
     next();
   };
@@ -70,7 +70,7 @@ setInterval(() => {
  * @access  Public
  * @body    { url: "https://wattpad.com/story/..." }
  */
-router.post('/recommend', 
+router.post('/recommend',
   rateLimiter(RATE_LIMIT_MAX_RECOMMEND),
   novelController.recommend
 );
@@ -140,6 +140,107 @@ router.get('/stats',
 );
 
 /**
+ * @route   GET /api/notice
+ * @desc    Lấy thông báo hiện tại
+ * @access  Public
+ */
+const { SiteNotice } = require('../models');
+
+router.get('/notice',
+  rateLimiter(RATE_LIMIT_MAX_GENERAL),
+  async (req, res) => {
+    try {
+      const notice = await SiteNotice.getCurrent();
+      return res.json({
+        success: true,
+        data: notice
+      });
+    } catch (error) {
+      console.error('[Notice] Error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/novels/:id/report
+ * @desc    Report tag sai cho truyện (không cần xác thực)
+ * @access  Public
+ * @body    { reportType, wrongTags?, suggestedTags?, reason? }
+ */
+const { TagReport } = require('../models');
+const REPORT_RATE_LIMIT = 5; // Max 5 reports per minute per IP
+
+router.post('/novels/:id/report',
+  rateLimiter(REPORT_RATE_LIMIT),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reportType = 'wrong_tag', wrongTags = [], suggestedTags = [], reason = '' } = req.body || {};
+
+      // Validate novel exists
+      const Novel = require('../models/Novel');
+      const novel = await Novel.findById(id).select('_id title').lean();
+      if (!novel) {
+        return res.status(404).json({
+          success: false,
+          error: 'Novel not found',
+          message: 'Không tìm thấy truyện.'
+        });
+      }
+
+      // Get reporter IP for basic spam protection
+      const reporterIp = req.ip || req.connection?.remoteAddress || 'unknown';
+
+      // Check if same IP reported same novel recently (last 24h)
+      const recentReport = await TagReport.findOne({
+        novelId: id,
+        reporterIp,
+        createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+      });
+
+      if (recentReport) {
+        return res.status(429).json({
+          success: false,
+          error: 'Already reported',
+          message: 'Bạn đã report truyện này trong vòng 24 giờ qua.'
+        });
+      }
+
+      // Create report
+      const report = await TagReport.create({
+        novelId: id,
+        reportType,
+        wrongTags: Array.isArray(wrongTags) ? wrongTags.slice(0, 20) : [],
+        suggestedTags: Array.isArray(suggestedTags) ? suggestedTags.slice(0, 20) : [],
+        reason: typeof reason === 'string' ? reason.substring(0, 1000) : '',
+        reporterIp,
+        status: 'pending'
+      });
+
+      console.log(`[Report] New report for novel "${novel.title}" (${id}) - Type: ${reportType}`);
+
+      return res.json({
+        success: true,
+        data: {
+          message: 'Cảm ơn bạn đã báo cáo! Chúng tôi sẽ xem xét và xử lý.',
+          reportId: report._id
+        }
+      });
+    } catch (error) {
+      console.error('[Report] Error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+);
+
+/**
  * @route   GET /api/health
  * @desc    Health check endpoint
  * @access  Public
@@ -169,7 +270,7 @@ const MAX_CACHE_SIZE = 500; // Giới hạn số ảnh cache
 router.get('/image-proxy', async (req, res) => {
   try {
     const { url } = req.query;
-    
+
     if (!url) {
       return res.status(400).json({ error: 'URL is required' });
     }
@@ -209,7 +310,7 @@ router.get('/image-proxy', async (req, res) => {
     });
 
     const contentType = response.headers['content-type'] || 'image/jpeg';
-    
+
     // Chỉ cache nếu là image
     if (contentType.startsWith('image/')) {
       // Cleanup cache nếu quá lớn
@@ -217,7 +318,7 @@ router.get('/image-proxy', async (req, res) => {
         const oldestKey = imageCache.keys().next().value;
         imageCache.delete(oldestKey);
       }
-      
+
       imageCache.set(cacheKey, {
         data: response.data,
         contentType,
@@ -232,7 +333,7 @@ router.get('/image-proxy', async (req, res) => {
 
   } catch (error) {
     console.error('[ImageProxy] Error:', error.message);
-    
+
     // Trả về placeholder image khi lỗi
     res.redirect('https://via.placeholder.com/300x400/1e293b/64748b?text=No+Image');
   }

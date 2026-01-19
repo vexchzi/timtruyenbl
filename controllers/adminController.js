@@ -259,7 +259,7 @@ async function getAllTags(req, res) {
     const tags = await TagDictionary.find({ isActive: true })
       .sort({ category: 1, priority: -1, standardTag: 1 })
       .lean();
-    
+
     return res.json({
       success: true,
       data: {
@@ -340,7 +340,7 @@ async function updateTag(req, res) {
       const aliasListRaw = Array.isArray(aliases)
         ? aliases
         : (typeof aliases === 'string' ? aliases.split(/[,;\n]+/) : []);
-      
+
       const aliasSet = new Set();
       for (const a of aliasListRaw) {
         if (typeof a !== 'string') continue;
@@ -353,7 +353,7 @@ async function updateTag(req, res) {
       // Always include the standardTag itself
       aliasSet.add(tag.standardTag.toLowerCase());
       aliasSet.add(tag.keyword);
-      
+
       tag.aliases = Array.from(aliasSet).slice(0, 200);
     }
 
@@ -378,7 +378,7 @@ async function updateTag(req, res) {
 
     return res.json({
       success: true,
-      data: { 
+      data: {
         tag,
         novelsUpdated: tagRenamed ? novelsUpdated : 0
       }
@@ -446,9 +446,9 @@ async function autoTagNovels(req, res) {
         { standardTags: null }
       ]
     })
-    .limit(maxLimit)
-    .select('_id title rawTags description standardTags')
-    .lean();
+      .limit(maxLimit)
+      .select('_id title rawTags description standardTags')
+      .lean();
 
     if (novels.length === 0) {
       return res.json({
@@ -502,7 +502,7 @@ async function autoTagNovels(req, res) {
           const rawTags = novel.rawTags || [];
           const desc = novel.description || '';
           const descExtracted = extractTagsFromDescription(desc);
-          
+
           results.push({
             id: novel._id,
             title: novel.title,
@@ -514,9 +514,9 @@ async function autoTagNovels(req, res) {
             descExtracted: descExtracted.slice(0, 5), // Tags extracted from description format
             descSample: desc.substring(0, 200), // First 200 chars of description
             reason: rawTags.length === 0 && desc.length < 50
-              ? 'Không có rawTags và description quá ngắn' 
-              : rawTags.length === 0 
-                ? 'Không có rawTags, description không chứa từ khóa' 
+              ? 'Không có rawTags và description quá ngắn'
+              : rawTags.length === 0
+                ? 'Không có rawTags, description không chứa từ khóa'
                 : 'rawTags và description không khớp TagDictionary'
           });
         }
@@ -593,14 +593,14 @@ async function retagAllNovels(req, res) {
     const cursor = Novel.find({
       rawTags: { $exists: true, $not: { $size: 0 } }
     })
-    .select('_id title rawTags description standardTags')
-    .cursor();
+      .select('_id title rawTags description standardTags')
+      .cursor();
 
     let batch = [];
-    
+
     for await (const novel of cursor) {
       batch.push(novel);
-      
+
       if (batch.length >= batchSize) {
         // Process batch
         const result = await processBatch(batch, dryRun, sampleChanges);
@@ -608,12 +608,12 @@ async function retagAllNovels(req, res) {
         unchangedCount += result.unchanged;
         errorCount += result.errors;
         processed += batch.length;
-        
+
         console.log(`[RetagAll] Processed ${processed}/${totalWithRawTags} (${updatedCount} updated)`);
         batch = [];
       }
     }
-    
+
     // Process remaining
     if (batch.length > 0) {
       const result = await processBatch(batch, dryRun, sampleChanges);
@@ -664,10 +664,10 @@ async function processBatch(novels, dryRun, sampleChanges) {
       const oldTags = novel.standardTags || [];
       const oldSet = new Set(oldTags);
       const newSet = new Set(newTags);
-      
+
       const added = newTags.filter(t => !oldSet.has(t));
       const removed = oldTags.filter(t => !newSet.has(t));
-      
+
       if (added.length > 0 || removed.length > 0) {
         if (!dryRun) {
           await Novel.findByIdAndUpdate(novel._id, {
@@ -675,7 +675,7 @@ async function processBatch(novels, dryRun, sampleChanges) {
           });
         }
         updated++;
-        
+
         // Keep sample changes (limit to 30)
         if (sampleChanges.length < 30) {
           sampleChanges.push({
@@ -721,7 +721,7 @@ async function getNovelStats(req, res) {
         total: totalNovels,
         withTags: novelsWithTags,
         withoutTags: novelsWithoutTags,
-        taggedPercent: totalNovels > 0 
+        taggedPercent: totalNovels > 0
           ? ((novelsWithTags / totalNovels) * 100).toFixed(1) + '%'
           : '0%'
       }
@@ -804,7 +804,7 @@ async function recrawlNovel(req, res) {
 
     // Update novel with new data (only update fields that have data)
     const updateFields = { updatedAt: new Date() };
-    
+
     if (crawledData.description && crawledData.description.trim()) {
       updateFields.description = crawledData.description.trim();
     }
@@ -874,7 +874,7 @@ async function recrawlNovel(req, res) {
 async function searchByKeyword(req, res) {
   try {
     const { keyword, searchIn = 'all', limit = 500 } = req.query;
-    
+
     if (!keyword || keyword.trim().length < 2) {
       return res.status(400).json({
         success: false,
@@ -882,17 +882,17 @@ async function searchByKeyword(req, res) {
         message: 'Từ khóa phải có ít nhất 2 ký tự'
       });
     }
-    
+
     const kw = keyword.trim();
     const maxLimit = Math.min(parseInt(limit, 10) || 500, 1000);
-    
+
     // Build regex for search (case-insensitive)
     const regex = new RegExp(kw, 'i');
-    
+
     // Build query based on searchIn
     let query = {};
     let projection = 'title author description rawTags standardTags originalLink source';
-    
+
     switch (searchIn) {
       case 'title':
         query = { title: regex };
@@ -930,20 +930,20 @@ async function searchByKeyword(req, res) {
         };
         break;
     }
-    
+
     console.log(`[Admin] Keyword search: "${kw}" in ${searchIn}`);
-    
+
     const novels = await Novel.find(query)
       .select(projection)
       .limit(maxLimit)
       .sort({ createdAt: -1 })
       .lean();
-    
+
     // Count total (without limit)
     const total = await Novel.countDocuments(query);
-    
+
     console.log(`[Admin] Found ${novels.length}/${total} novels for keyword "${kw}"`);
-    
+
     return res.json({
       success: true,
       data: {
@@ -954,13 +954,265 @@ async function searchByKeyword(req, res) {
         searchIn
       }
     });
-    
+
   } catch (error) {
     console.error('[Admin] searchByKeyword error:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
       message: error.message
+    });
+  }
+}
+
+// ============== Tag Reports Management ==============
+
+const { TagReport } = require('../models');
+
+/**
+ * GET /api/admin/reports/stats
+ * Get statistics about tag reports
+ */
+async function getReportStats(req, res) {
+  try {
+    const stats = await TagReport.getStats();
+
+    return res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('[Admin] getReportStats error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+}
+
+/**
+ * GET /api/admin/reports
+ * Get all reports with pagination
+ * Query: status, page, limit
+ */
+async function getReports(req, res) {
+  try {
+    const { status = 'all', page = 1, limit = 20 } = req.query;
+
+    const result = await TagReport.getReportsWithNovel({
+      status,
+      page: parseInt(page, 10) || 1,
+      limit: Math.min(parseInt(limit, 10) || 20, 100)
+    });
+
+    return res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('[Admin] getReports error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+}
+
+/**
+ * PUT /api/admin/reports/:id/status
+ * Update report status
+ * Body: { status, adminNote? }
+ */
+async function updateReportStatus(req, res) {
+  try {
+    const { id } = req.params;
+    const { status, adminNote } = req.body || {};
+
+    const validStatuses = ['pending', 'reviewed', 'resolved', 'rejected'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid status',
+        message: `Status phải là một trong: ${validStatuses.join(', ')}`
+      });
+    }
+
+    const updateData = { status };
+    if (adminNote) {
+      updateData.adminNote = adminNote;
+    }
+    if (status === 'resolved' || status === 'rejected') {
+      updateData.resolvedAt = new Date();
+    }
+
+    const report = await TagReport.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true }
+    ).populate('novelId', 'title');
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        error: 'Report not found'
+      });
+    }
+
+    console.log(`[Admin] Updated report ${id} status to ${status}`);
+
+    return res.json({
+      success: true,
+      data: { report }
+    });
+  } catch (error) {
+    console.error('[Admin] updateReportStatus error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+}
+
+/**
+ * POST /api/admin/reports/:id/resolve
+ * Resolve report and optionally update novel tags
+ * Body: { newTags?, adminNote? }
+ */
+async function resolveReport(req, res) {
+  try {
+    const { id } = req.params;
+    const { newTags, adminNote } = req.body || {};
+
+    const report = await TagReport.findById(id).populate('novelId');
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        error: 'Report not found'
+      });
+    }
+
+    // Update novel tags if provided
+    let novelUpdated = false;
+    if (Array.isArray(newTags) && report.novelId) {
+      await Novel.findByIdAndUpdate(report.novelId._id, {
+        $set: {
+          standardTags: newTags.slice(0, 200),
+          updatedAt: new Date()
+        }
+      });
+      novelUpdated = true;
+      console.log(`[Admin] Updated tags for novel ${report.novelId._id}`);
+    }
+
+    // Update report status
+    report.status = 'resolved';
+    report.resolvedAt = new Date();
+    if (adminNote) {
+      report.adminNote = adminNote;
+    }
+    await report.save();
+
+    console.log(`[Admin] Resolved report ${id}`);
+
+    return res.json({
+      success: true,
+      data: {
+        report,
+        novelUpdated
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] resolveReport error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+}
+
+/**
+ * DELETE /api/admin/reports/:id
+ * Delete a report
+ */
+async function deleteReport(req, res) {
+  try {
+    const { id } = req.params;
+
+    const report = await TagReport.findByIdAndDelete(id);
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        error: 'Report not found'
+      });
+    }
+
+    console.log(`[Admin] Deleted report ${id}`);
+
+    return res.json({
+      success: true,
+      data: { deletedId: id }
+    });
+  } catch (error) {
+    console.error('[Admin] deleteReport error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+}
+
+// ============== Site Notice Management ==============
+
+const { SiteNotice } = require('../models');
+
+/**
+ * GET /api/admin/notice
+ * Get current site notice
+ */
+async function getNotice(req, res) {
+  try {
+    const notice = await SiteNotice.getCurrent();
+
+    return res.json({
+      success: true,
+      data: notice
+    });
+  } catch (error) {
+    console.error('[Admin] getNotice error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+}
+
+/**
+ * PUT /api/admin/notice
+ * Update site notice
+ * Body: { title?, content?, isActive? }
+ */
+async function updateNotice(req, res) {
+  try {
+    const { title, content, isActive } = req.body || {};
+
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (content !== undefined) updateData.content = content;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    const notice = await SiteNotice.updateNotice(updateData);
+
+    console.log(`[Admin] Updated site notice - Active: ${notice.isActive}`);
+
+    return res.json({
+      success: true,
+      data: notice
+    });
+  } catch (error) {
+    console.error('[Admin] updateNotice error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
     });
   }
 }
@@ -976,6 +1228,16 @@ module.exports = {
   retagAllNovels,
   getNovelStats,
   recrawlNovel,
-  searchByKeyword
+  searchByKeyword,
+  // Report management
+  getReportStats,
+  getReports,
+  updateReportStatus,
+  resolveReport,
+  deleteReport,
+  // Site notice management
+  getNotice,
+  updateNotice
 };
+
 

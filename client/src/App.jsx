@@ -6,6 +6,8 @@ import BrowsePage from './components/BrowsePage';
 import NovelModal from './components/NovelModal';
 import { getRecommendations, getStats } from './services/api';
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 /**
  * App Component - Soft & Gentle Theme
  */
@@ -15,9 +17,13 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(null);
-  
+
   const [selectedNovel, setSelectedNovel] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Notice state
+  const [notice, setNotice] = useState(null);
+  const [showNoticePopup, setShowNoticePopup] = useState(false);
 
   const handleCardClick = (novel) => {
     setSelectedNovel(novel);
@@ -30,24 +36,34 @@ export default function App() {
   };
 
   useEffect(() => {
-    getStats().then(data => setStats(data)).catch(() => {});
+    getStats().then(data => setStats(data)).catch(() => { });
+
+    // Fetch notice
+    fetch(`${API_BASE}/notice`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setNotice(data.data);
+        }
+      })
+      .catch(() => { });
   }, []);
 
   const handleSearch = async (url) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const data = await getRecommendations(url);
       setResult(data);
-      
+
       setTimeout(() => {
-        document.getElementById('results')?.scrollIntoView({ 
+        document.getElementById('results')?.scrollIntoView({
           behavior: 'smooth',
           block: 'start'
         });
       }, 100);
-      
+
     } catch (err) {
       setError(err.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
       setResult(null);
@@ -59,22 +75,31 @@ export default function App() {
   if (currentPage === 'browse') {
     return (
       <>
-        <Navigation 
-          currentPage={currentPage} 
+        <Navigation
+          currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           stats={stats}
+          notice={notice}
+          onShowNotice={() => setShowNoticePopup(true)}
         />
         <BrowsePage />
+        <NoticePopup
+          notice={notice}
+          isOpen={showNoticePopup}
+          onClose={() => setShowNoticePopup(false)}
+        />
       </>
     );
   }
 
   return (
     <div className="min-h-screen">
-      <Navigation 
-        currentPage={currentPage} 
+      <Navigation
+        currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         stats={stats}
+        notice={notice}
+        onShowNotice={() => setShowNoticePopup(true)}
       />
 
 
@@ -92,7 +117,7 @@ export default function App() {
             <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-stone-100">
               BL Novel Recommender
             </h1>
-            
+
             <p className="text-stone-400 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
               Khám phá những câu chuyện phù hợp với bạn
               <br className="hidden sm:block" />
@@ -122,7 +147,7 @@ export default function App() {
         {(result || isLoading) && (
           <section id="results" className="px-4 pb-20">
             <div className="max-w-7xl mx-auto">
-              
+
               {result?.sourceNovel && (
                 <div className="mb-12">
                   <SourceNovelCard novel={result.sourceNovel} />
@@ -173,7 +198,7 @@ export default function App() {
                       <h3 className="text-lg font-semibold text-stone-200 mb-2">Chưa có gợi ý</h3>
                       <p className="text-stone-500 max-w-md mx-auto">
                         Thư viện cần thêm truyện để gợi ý tốt hơn.
-                        <button 
+                        <button
                           onClick={() => setCurrentPage('browse')}
                           className="text-stone-400 hover:text-stone-300 ml-1 underline underline-offset-2"
                         >
@@ -254,6 +279,12 @@ export default function App() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
       />
+
+      <NoticePopup
+        notice={notice}
+        isOpen={showNoticePopup}
+        onClose={() => setShowNoticePopup(false)}
+      />
     </div>
   );
 }
@@ -261,12 +292,12 @@ export default function App() {
 /**
  * Navigation - Soft theme
  */
-function Navigation({ currentPage, setCurrentPage, stats }) {
+function Navigation({ currentPage, setCurrentPage, stats, notice, onShowNotice }) {
   return (
     <nav className="sticky top-0 z-50 bg-stone-900/90 backdrop-blur-lg border-b border-stone-800">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-14">
-          <button 
+          <button
             onClick={() => setCurrentPage('home')}
             className="flex items-center gap-2.5 text-stone-100 font-medium group"
           >
@@ -281,21 +312,19 @@ function Navigation({ currentPage, setCurrentPage, stats }) {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrentPage('home')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                currentPage === 'home'
-                  ? 'bg-stone-800 text-stone-100'
-                  : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'home'
+                ? 'bg-stone-800 text-stone-100'
+                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                }`}
             >
               Tìm kiếm
             </button>
             <button
               onClick={() => setCurrentPage('browse')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                currentPage === 'browse'
-                  ? 'bg-stone-800 text-stone-100'
-                  : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${currentPage === 'browse'
+                ? 'bg-stone-800 text-stone-100'
+                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                }`}
             >
               Thư viện
               {stats?.totalNovels && (
@@ -305,9 +334,78 @@ function Navigation({ currentPage, setCurrentPage, stats }) {
               )}
             </button>
           </div>
+
+          {/* Info button */}
+          <div className="flex items-center gap-2">
+            {notice?.isActive && (
+              <button
+                onClick={onShowNotice}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-amber-400 hover:text-amber-300 hover:bg-stone-800/50 transition-colors"
+                title="Xem thông báo"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="hidden sm:inline">Thông báo</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </nav>
+  );
+}
+
+/**
+ * Notice Popup
+ */
+function NoticePopup({ notice, isOpen, onClose }) {
+  if (!isOpen || !notice) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative w-full max-w-lg bg-stone-900 rounded-xl border border-stone-700 shadow-xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-stone-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-amber-500/20">
+              <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-stone-100">{notice.title || 'Thông báo'}</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-stone-500 hover:text-stone-300 hover:bg-stone-800 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 max-h-[60vh] overflow-y-auto">
+          <div
+            className="text-stone-300 text-sm leading-relaxed whitespace-pre-wrap"
+            dangerouslySetInnerHTML={{ __html: notice.content || '' }}
+          />
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-stone-800">
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-2.5 bg-stone-700 hover:bg-stone-600 text-stone-100 rounded-lg transition-colors text-sm font-medium"
+          >
+            Đã hiểu
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -325,3 +423,4 @@ function FeatureCard({ icon, title, description }) {
     </div>
   );
 }
+
