@@ -3356,6 +3356,63 @@
       `;
     }
 
+    async function applyBulkTagToSearchResults() {
+      const tagInput = document.getElementById('bulkAddTagInput');
+      const tagName = tagInput.value.trim();
+
+      if (!tagName) {
+        showToast('Vui lòng nhập tên tag!', true);
+        return;
+      }
+
+      const visibleResults = auditResults.filter(n => !markedCorrect.has(n._id));
+      const novelIds = visibleResults.map(n => n._id);
+
+      if (novelIds.length === 0) {
+        showToast('Không có truyện nào để thêm tag', true);
+        return;
+      }
+
+      if (!confirm(`Bạn có chắc muốn thêm tag "${tagName}" cho ${novelIds.length} truyện đang hiển thị không?`)) {
+        return;
+      }
+
+      try {
+        showToast(`Đang thêm tag "${tagName}"...`);
+        const res = await fetch(API + '/admin/tags/bulk-add-novels', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Token': adminToken
+          },
+          body: JSON.stringify({ novelIds, tag: tagName })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          showToast(`Thành công! Đã cập nhật ${data.data.modified} truyện.`);
+
+          // Cập nhật UI local
+          auditResults.forEach(n => {
+            if (novelIds.includes(n._id)) {
+              if (!n.standardTags) n.standardTags = [];
+              if (!n.standardTags.includes(tagName)) {
+                n.standardTags.push(tagName);
+              }
+            }
+          });
+
+          renderKeywordSearchResults();
+        } else {
+          showToast(data.error || 'Lỗi khi cập nhật', true);
+        }
+
+      } catch (err) {
+        showToast('Lỗi kết nối: ' + err.message, true);
+      }
+    }
+
     function renderKeywordSearchResults() {
       const container = document.getElementById('auditResultsList');
 
@@ -3370,10 +3427,37 @@
         return;
       }
 
+      let datalistOptions = '';
+      if (allTags && typeof allTags === 'object') {
+        Object.keys(allTags).forEach(cat => {
+          if (allTags[cat].tags) {
+            allTags[cat].tags.forEach(t => {
+              datalistOptions += `<option value="${t.name}">`;
+            });
+          }
+        });
+      }
+
+      const bulkActionHtml = `
+        <div class="bulk-action-bar" style="background:rgba(64, 160, 144, 0.1); padding:12px; border-radius:8px; margin-bottom:15px; display:flex; flex-wrap:wrap; gap:15px; align-items:center; border:1px solid rgba(64, 160, 144, 0.3);">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="color:#e0e0e8; font-weight:600;">⚡ Thao tác hàng loạt:</span>
+            <span style="color:#a0a0a8; font-size:0.9rem;">(Áp dụng cho ${visibleResults.length} truyện bên dưới)</span>
+          </div>
+          <div style="display:flex; gap:8px; flex:1;">
+            <input type="text" id="bulkAddTagInput" placeholder="Nhập tên tag cần thêm (VD: Song Tính)..." list="bulkTagList" style="flex:1; min-width:200px; padding:8px 12px; border-radius:4px; border:1px solid #40a090; background:#16161e; color:#fff;">
+            <datalist id="bulkTagList">
+              ${datalistOptions}
+            </datalist>
+            <button onclick="applyBulkTagToSearchResults()" style="background:#e0a050; color:#121218; border:none; padding:8px 20px; border-radius:4px; font-weight:600; cursor:pointer; white-space:nowrap;">Thêm Tag</button>
+          </div>
+        </div>
+      `;
+
       const keywordLower = currentKeyword.toLowerCase();
       const keywordNorm = normalizeForSearch(currentKeyword);
 
-      container.innerHTML = visibleResults.map(novel => {
+      container.innerHTML = bulkActionHtml + visibleResults.map(novel => {
         const standardTags = (novel.standardTags || []).slice(0, 8);
         const rawTags = (novel.rawTags || []).slice(0, 10);
         const desc = (novel.description || '').substring(0, 200);

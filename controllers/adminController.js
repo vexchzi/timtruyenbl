@@ -1240,8 +1240,48 @@ module.exports = {
   getNotice,
   updateNotice,
   // Helper
-  analyzeTagsText
+  analyzeTagsText,
+  bulkAddTagToNovels
 };
+
+/**
+ * POST /api/admin/tags/bulk-add-novels
+ * Thêm 1 tag cho danh sách các novel IDs
+ * Body: { novelIds: ["id1", "id2"], tag: "TagName" }
+ */
+async function bulkAddTagToNovels(req, res) {
+  try {
+    const { novelIds, tag } = req.body;
+
+    if (!novelIds || !Array.isArray(novelIds) || novelIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'Danh sách truyện trống' });
+    }
+
+    if (!tag || typeof tag !== 'string') {
+      return res.status(400).json({ success: false, error: 'Tên tag không hợp lệ' });
+    }
+
+    // Chỉ thêm tag, không ghi đè tags cũ ($addToSet)
+    const result = await Novel.updateMany(
+      { _id: { $in: novelIds } },
+      { $addToSet: { standardTags: tag } }
+    );
+
+    console.log(`[Admin] Bulk added tag "${tag}" to ${novelIds.length} novels. Modified: ${result.modifiedCount}`);
+
+    return res.json({
+      success: true,
+      data: {
+        matched: result.matchedCount,
+        modified: result.modifiedCount
+      }
+    });
+
+  } catch (error) {
+    console.error('[Admin] bulkAddTagToNovels error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+}
 
 /**
  * POST /api/admin/tags/analyze

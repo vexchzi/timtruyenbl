@@ -42,6 +42,8 @@ router.delete('/novels/:id', adminController.deleteNovel);
 
 // Analyze tags from text
 router.post('/tags/analyze', adminController.analyzeTagsText);
+// Bulk add tag to novels
+router.post('/tags/bulk-add-novels', adminController.bulkAddTagToNovels);
 
 // ============== Tag Reports Management ==============
 
