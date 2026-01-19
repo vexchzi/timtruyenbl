@@ -3656,6 +3656,9 @@
               ${report.status !== 'resolved' ? `
                 <button class="btn-report-action btn-report-edit" onclick="openEditFromReport('${report._id}', '${novel._id}')">✏️ Sửa tags</button>
                 <button class="btn-report-action btn-report-resolve" onclick="resolveReport('${report._id}')">✓ Đánh dấu xử lý</button>
+                ${(report.wrongTags && report.wrongTags.length > 0) ?
+              `<button class="btn-report-action" style="background:#e0a050;color:#121218" onclick="quickResolveReport('${report._id}', '${novel._id}', '${encodeURIComponent(JSON.stringify(report.wrongTags))}')">⚡ Xử lý nhanh</button>`
+              : ''}
               ` : ''}
               ${report.status === 'pending' ? `
                 <button class="btn-report-action btn-report-reject" onclick="updateReportStatus('${report._id}', 'rejected')">✗ Từ chối</button>
@@ -3744,11 +3747,57 @@
       }
     }
 
-    async function openEditFromReport(reportId, novelId) {
+    async function openEditFromReport(reportId, novelId, wrongTags) {
       // Just open the modal to edit tags - don't auto-update status
       // Admin should manually mark as resolved after editing
       if (novelId) {
         await openModal(novelId);
+      }
+    }
+
+    async function quickResolveReport(reportId, novelId, wrongTagsSafe) {
+      if (!confirm('Bạn có chắc muốn xoá các tags báo sai và đánh dấu đã xử lý?')) return;
+
+      try {
+        const wrongTags = JSON.parse(decodeURIComponent(wrongTagsSafe));
+
+        // 1. Get current novel details to get latest tags
+        const res = await fetch(`/api/novels/${novelId}`);
+        const data = await res.json();
+
+        if (!data.success || !data.data) {
+          throw new Error('Không thể lấy thông tin truyện');
+        }
+
+        const novel = data.data;
+        const currentTags = novel.standardTags || [];
+
+        // 2. Remove wrong tags
+        const newTags = currentTags.filter(t => !wrongTags.includes(t));
+
+        if (newTags.length === currentTags.length) {
+          if (!confirm('Không tìm thấy tag nào trong danh sách tag hiện tại để xoá. Vẫn đánh dấu đã xử lý?')) {
+            return;
+          }
+        }
+
+        // 3. Resolve report with new tags
+        const result = await api(`/admin/reports/${reportId}/resolve`, {
+          method: 'POST',
+          body: JSON.stringify({
+            newTags: newTags,
+            adminNote: 'Auto: Đã xoá tags báo sai.'
+          })
+        });
+
+        if (result.success) {
+          showToast('Đã xử lý nhanh thành công!');
+          await loadReports();
+        } else {
+          showToast(result.message || 'Lỗi xử lý', true);
+        }
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, true);
       }
     }
 
