@@ -3654,7 +3654,6 @@
             </div>
             <div class="report-item-actions">
               ${report.status !== 'resolved' ? `
-                <button class="btn-report-action btn-report-edit" onclick="openEditFromReport('${report._id}', '${novel._id}')">✏️ Sửa tags</button>
                 <button class="btn-report-action btn-report-resolve" onclick="resolveReport('${report._id}')">✓ Đánh dấu xử lý</button>
                 ${(report.wrongTags && report.wrongTags.length > 0) ?
               `<button class="btn-report-action" style="background:#e0a050;color:#121218" onclick="quickResolveReport('${report._id}', '${novel._id}', '${encodeURIComponent(JSON.stringify(report.wrongTags))}')">⚡ Xử lý nhanh</button>`
@@ -3793,7 +3792,7 @@
           throw new Error('Không thể lấy thông tin truyện');
         }
 
-        const novel = data.data;
+        const novel = data.data.novel || data.data;
         const currentTags = novel.standardTags || [];
 
         // 2. Remove wrong tags (Case-insensitive & trim)
@@ -3842,7 +3841,7 @@
           throw new Error('Không thể lấy thông tin truyện');
         }
 
-        const novel = data.data;
+        const novel = data.data.novel || data.data;
         const currentTags = novel.standardTags || [];
 
         // 2. Add new tag if not exists
