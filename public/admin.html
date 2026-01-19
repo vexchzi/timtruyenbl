@@ -3796,8 +3796,9 @@
         const novel = data.data;
         const currentTags = novel.standardTags || [];
 
-        // 2. Remove wrong tags
-        const newTags = currentTags.filter(t => !wrongTags.includes(t));
+        // 2. Remove wrong tags (Case-insensitive & trim)
+        const wrongTagsNormalized = wrongTags.map(t => t.toLowerCase().trim());
+        const newTags = currentTags.filter(t => !wrongTagsNormalized.includes(t.toLowerCase().trim()));
 
         if (newTags.length === currentTags.length) {
           if (!confirm('Không tìm thấy tag nào trong danh sách tag hiện tại để xoá. Vẫn đánh dấu đã xử lý?')) {
