@@ -102,7 +102,7 @@ exports.getRankings = async (req, res) => {
         const novels = await Novel.find({})
             .sort(sortOption)
             .limit(limitNum)
-            .select('title author coverImage voteCount weeklyScore readCount ratingAverage reviewCount status source originalLink')
+            .select('title author coverImage voteCount weeklyScore readCount ratingAverage reviewCount status source originalLink description standardTags rawTags')
             .lean();
 
         return res.json({
