@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getBestAuthorName } from '../utils/authorUtils';
+import ReviewSection from './ReviewSection';
+import VoteButton from './VoteButton';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -42,7 +44,7 @@ export default function NovelModal({ novel, isOpen, onClose, onTagClick }) {
   // Early return after all hooks
   if (!isOpen || !novel) return null;
 
-  const { title, description, coverImage, originalLink, standardTags = [], rawTags = [], source, readCount, chapterCount } = novel;
+  const { title, description, coverImage, originalLink, standardTags = [], rawTags = [], source, readCount, chapterCount, ratingAverage, reviewCount } = novel;
   const displayAuthor = getBestAuthorName(novel);
 
   const getProxiedImage = (url) => url ? `${API_BASE}/image-proxy?url=${encodeURIComponent(url)}` : null;
@@ -133,6 +135,17 @@ export default function NovelModal({ novel, isOpen, onClose, onTagClick }) {
               )}
               {chapterCount > 0 && <span className="px-2 py-0.5 bg-stone-800 rounded">{chapterCount} chương</span>}
               {readCount > 0 && <span className="px-2 py-0.5 bg-stone-800 rounded">{readCount.toLocaleString()} lượt đọc</span>}
+              {(ratingAverage > 0) && (
+                <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-900/20 text-yellow-500 rounded border border-yellow-900/30">
+                  <span className="font-bold">{ratingAverage}</span>
+                  <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                  <span className="text-[10px] text-yellow-600/80">({reviewCount})</span>
+                </div>
+              )}
+            </div>
+            {/* Vote Button */}
+            <div className="mt-2 text-stone-300">
+              <VoteButton novelId={novel._id} voteCount={novel.voteCount || 0} />
             </div>
           </div>
 
@@ -271,6 +284,8 @@ export default function NovelModal({ novel, isOpen, onClose, onTagClick }) {
               </div>
             </div>
           )}
+
+          <ReviewSection novelId={novel._id} />
         </div>
 
         {/* Footer */}

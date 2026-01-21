@@ -1415,9 +1415,10 @@
       <button class="tab-btn active" onclick="switchTab('novels')">Quản lý Truyện</button>
       <button class="tab-btn" onclick="switchTab('tags')">Quản lý Tags</button>
       <button class="tab-btn" onclick="switchTab('reports')" id="tabBtnReports">
-        Báo cáo Tag
+        Báo cáo Lỗi
         <span id="reportBadge" class="report-badge" style="display:none">0</span>
       </button>
+      <button class="tab-btn" onclick="switchTab('reviews')">Quản lý Bình luận</button>
       <button class="tab-btn" onclick="switchTab('notice')">Thông báo Web</button>
       <button class="tab-btn" onclick="switchTab('tools')">Công cụ</button>
     </div>
@@ -1679,6 +1680,49 @@
         <button onclick="reportPrevPage()" id="reportPrevBtn">← Trước</button>
         <span id="reportPageInfo">Trang 1</span>
         <button onclick="reportNextPage()" id="reportNextBtn">Sau →</button>
+      </div>
+    </div>
+
+    <!-- Tab: Reviews -->
+    <div class="tab-content" id="tab-reviews">
+      <div class="report-stats-panel" style="flex-direction:column;align-items:stretch">
+        <h3 style="color:#e8a0b8;margin-bottom:15px;font-size:1.1rem">💬 Quản lý Bình luận</h3>
+        <p style="color:#909098;margin-bottom:15px">Danh sách 20 bình luận mới nhất của toàn bộ hệ thống.</p>
+
+        <div style="display:flex;gap:10px;margin-bottom:15px">
+          <input type="text" id="reviewSearch" placeholder="Tìm kiếm nội dung, người đăng..."
+            style="flex:1;padding:8px 12px;background:#2a2a4a;border:1px solid #444;border-radius:6px;color:#e0e0e8"
+            onkeydown="if(event.key==='Enter') loadReviews(1)">
+          <button onclick="loadReviews(1)" class="btn-audit" style="width:auto;border-color:#e8a0b8;color:#e8a0b8">Tìm
+            kiếm</button>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:140px">Thời gian</th>
+                <th style="width:120px">Người đăng</th>
+                <th style="width:200px">Truyện</th>
+                <th style="width:80px">Điểm</th>
+                <th>Nội dung</th>
+                <th style="width:80px">Xóa</th>
+              </tr>
+            </thead>
+            <tbody id="reviewList">
+              <tr>
+                <td colspan="6" class="loading">Đang tải bình luận...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination" id="reviewPagination"
+          style="margin-top:15px;display:flex;justify-content:center;gap:10px"></div>
+
+        <button onclick="loadLatestReviews()" class="btn-auto-tag" style="align-self:flex-start; margin-top:10px">
+          🔄 Tải lại danh sách
+        </button>
       </div>
     </div>
 
@@ -3753,6 +3797,65 @@
       await loadReportStats(); // Load report stats for badge
     }
 
+    // ============== REVIEWS MANAGEMENT ==============
+    async function loadLatestReviews() {
+      const confirmBtn = document.querySelector('button[onclick="loadLatestReviews()"]');
+      if (confirmBtn) confirmBtn.innerHTML = '⏳ Đang tải...';
+
+      try {
+        const data = await api('/reviews/latest');
+        if (data.success) {
+          renderReviews(data.data);
+        } else {
+          showToast('Không tải được danh sách review', true);
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Lỗi kết nối', true);
+      } finally {
+        if (confirmBtn) confirmBtn.innerHTML = '🔄 Tải lại danh sách';
+      }
+    }
+
+    function renderReviews(reviews) {
+      const tbody = document.getElementById('reviewList');
+      if (!reviews || reviews.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999">Chưa có bình luận nào.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = reviews.map(r => `
+        <tr style="border-bottom:1px solid #2a2a38">
+          <td style="padding:10px; color:#888; font-size:0.85rem">
+            ${new Date(r.createdAt).toLocaleDateString('vi-VN')}
+            <div style="font-size:0.75rem">${new Date(r.createdAt).toLocaleTimeString('vi-VN')}</div>
+          </td>
+          <td style="padding:10px; font-weight:bold; color:#ccc">${r.nickname}</td>
+          <td style="padding:10px; color:#4ecdc4">${r.novel ? r.novel.title : 'Deleted Novel'}</td>
+          <td style="padding:10px; color:#f1c40f; font-weight:bold">${r.rating} ★</td>
+          <td style="padding:10px; color:#ddd; white-space:pre-wrap; max-width:400px">${r.content}</td>
+          <td style="padding:10px; text-align:right">
+            <button onclick="deleteReview('${r._id}')" style="background:#c0392b; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem">Xóa</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function deleteReview(id) {
+      if (!confirm('Bạn có chắc muốn xóa bình luận này?')) return;
+      try {
+        const res = await api('/reviews/' + id, { method: 'DELETE' });
+        if (res.success) {
+          showToast('Đã xóa bình luận');
+          loadLatestReviews();
+        } else {
+          showToast('Xóa thất bại', true);
+        }
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, true);
+      }
+    }
+
     // ============== REPORTS MANAGEMENT ==============
     let reports = [];
     let reportPage = 1;
@@ -4359,8 +4462,104 @@
       if (tabName === 'tags') loadTagDictionary();
       if (tabName === 'notice') loadNotice();
       if (tabName === 'tools') loadExportOptions();
+      if (tabName === 'reviews') loadReviews();
 
       localStorage.setItem('activeTab', tabName);
+    }
+
+    // --- Review Management ---
+    let reviews = [];
+    let reviewCurrentPage = 1;
+
+    async function loadReviews(page = 1) {
+      reviewCurrentPage = page;
+      const search = document.getElementById('reviewSearch').value.trim();
+
+      const tbody = document.getElementById('reviewList');
+      tbody.innerHTML = '<tr><td colspan="6" class="loading">Đang tải reviews...</td></tr>';
+
+      let endpoint = `/admin/reviews?page=${page}&limit=20`;
+      if (search) endpoint += `&search=${encodeURIComponent(search)}`;
+
+      try {
+        // api() helper adds /api prefix automatically
+        console.log('Fetching reviews from:', endpoint);
+        const data = await api(endpoint);
+
+        if (data.success) {
+          reviews = data.data.reviews || [];
+          renderReviewTable(data.data.pagination);
+        } else {
+          console.error('Load reviews failed:', data);
+          tbody.innerHTML = `<tr><td colspan="6" class="loading error">${data.message || data.error || 'Lỗi tải dữ liệu'}</td></tr>`;
+        }
+      } catch (err) {
+        console.error('Load reviews network error:', err);
+        tbody.innerHTML = `<tr><td colspan="6" class="loading error">Lỗi kết nối: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function loadLatestReviews() {
+      document.getElementById('reviewSearch').value = '';
+      await loadReviews(1);
+    }
+
+    function renderReviewTable(pagination) {
+      const tbody = document.getElementById('reviewList');
+      if (!reviews.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">Không có review nào.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = reviews.map(r => `
+            <tr>
+                <td style="font-size:0.85rem;color:#909098">${new Date(r.createdAt).toLocaleString('vi-VN')}</td>
+                <td>${r.userName || 'Ẩn danh'}</td>
+                <td>
+                    <a href="${r.novel?.originalLink || '#'}" target="_blank" style="color:#60c0b0;text-decoration:none">${r.novel?.title || 'Unknown'}</a>
+                </td>
+                <td style="color:#f1c40f">★ ${r.rating}</td>
+                <td>
+                   <div style="font-size:0.9rem;color:#e0e0e8;max-height:80px;overflow:hidden;text-overflow:ellipsis">${r.content || ''}</div>
+                </td>
+                <td>
+                    <button class="btn-remove-tag" onclick="deleteReview('${r._id}')">Xóa</button>
+                </td>
+            </tr>
+        `).join('');
+
+      // Render pagination
+      const p = document.getElementById('reviewPagination');
+      // Simple pagination for now
+      p.innerHTML = `
+            <button onclick="loadReviews(${pagination.page - 1})" ${pagination.page <= 1 ? 'disabled' : ''}>← Trước</button>
+            <span>Trang ${pagination.page} / ${pagination.pages}</span>
+            <button onclick="loadReviews(${pagination.page + 1})" ${pagination.page >= pagination.pages ? 'disabled' : ''}>Sau →</button>
+        `;
+    }
+
+    async function deleteReview(reviewId) {
+      if (!confirm('Bạn có chắc muốn xóa bình luận này không?')) return;
+
+      try {
+        const res = await fetch(`${API}/admin/reviews/${reviewId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Token': adminToken
+          }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast('Đã xóa review thành công');
+          loadReviews(reviewCurrentPage);
+        } else {
+          showToast(data.message || 'Lỗi khi xóa review', true);
+        }
+      } catch (err) {
+        showToast('Lỗi kết nối server', true);
+      }
     }
 
     // Init

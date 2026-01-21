@@ -72,7 +72,15 @@ router.delete('/reports/:id', adminController.deleteReport);
 router.get('/notice', adminController.getNotice);
 
 // Update notice
+// Update notice
 router.put('/notice', adminController.updateNotice);
 
-module.exports = router;
+// ============== Review Management ==============
 
+// Get all reviews
+router.get('/reviews', adminController.getReviews);
+
+// Delete a review
+router.delete('/reviews/:id', adminController.deleteReview);
+
+module.exports = router;

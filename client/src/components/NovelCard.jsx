@@ -20,11 +20,11 @@ const getPlaceholderColor = (char) => {
 /**
  * NovelCard - Soft Theme
  */
-export default function NovelCard({ novel, matchingTags = [], showMatchScore = false, onTagClick, onCardClick }) {
+export default function NovelCard({ novel, matchingTags = [], showMatchScore = false, onTagClick, onCardClick, rankingMode = false, showVoteCount = false }) {
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const { title, coverImage, originalLink, standardTags = [], similarityScore } = novel;
+  const { title, coverImage, originalLink, standardTags = [], similarityScore, voteCount, weeklyScore } = novel;
 
   const isValidImageUrl = (url) => url && typeof url === 'string' && (url.startsWith('http') || url.startsWith('data:'));
   const hasValidCover = isValidImageUrl(coverImage);
@@ -107,14 +107,22 @@ export default function NovelCard({ novel, matchingTags = [], showMatchScore = f
                 </svg>
               </button>
             </div>
-            
+
             <p className="text-stone-500 text-xs mb-2 truncate">{displayAuthor}</p>
+
+            {/* Vote Count / Ranking Mode Display */}
+            {(showVoteCount || (rankingMode && voteCount > 0)) && (
+              <div className="flex items-center gap-1 mb-2 text-rose-500/80 text-xs font-medium">
+                <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
+                <span>{voteCount?.toLocaleString() || 0} votes</span>
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-1">
               {standardTags.slice(0, 4).map((tag, index) => (
-                <TagBadge 
-                  key={index} 
-                  tag={tag} 
+                <TagBadge
+                  key={index}
+                  tag={tag}
                   isMatching={matchingTags.includes(tag)}
                   size="xs"
                   onClick={onTagClick ? (e) => handleTagClick(e, tag) : undefined}
@@ -219,10 +227,10 @@ export function NovelCardGrid({ novel, matchingTags = [], showMatchScore = false
           <p className="text-stone-500 text-xs mb-2 truncate">{displayAuthor}</p>
           <div className="flex flex-wrap gap-1">
             {standardTags.slice(0, 3).map((tag, index) => (
-              <TagBadge 
-                key={index} 
-                tag={tag} 
-                isMatching={matchingTags.includes(tag)} 
+              <TagBadge
+                key={index}
+                tag={tag}
+                isMatching={matchingTags.includes(tag)}
                 size="xs"
                 onClick={onTagClick ? (e) => handleTagClick(e, tag) : undefined}
               />

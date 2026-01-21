@@ -12,7 +12,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 
 // Import routes
-const { novelRoutes, adminRoutes } = require('./routes');
+const { novelRoutes, adminRoutes, reviewRoutes, voteRoutes } = require('./routes');
 
 // Import utilities
 const { warmUpCache } = require('./utils/tagNormalizer');
@@ -70,6 +70,8 @@ app.use(express.static(path.join(__dirname, 'client/dist')));
 // API routes
 app.use('/api', novelRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/votes', voteRoutes);
 
 // API info endpoint
 app.get('/api', (req, res) => {
@@ -98,12 +100,12 @@ app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) {
     return next();
   }
-  
+
   // Skip admin page
   if (req.path === '/admin.html' || req.path === '/admin') {
     return res.sendFile(path.join(__dirname, 'public/admin.html'));
   }
-  
+
   // Serve React SPA
   const indexPath = path.join(__dirname, 'client/dist/index.html');
   res.sendFile(indexPath, (err) => {
@@ -131,7 +133,7 @@ app.use((req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('[Server Error]', err);
-  
+
   res.status(err.status || 500).json({
     success: false,
     error: NODE_ENV === 'production' ? 'Internal Server Error' : err.message,
@@ -144,20 +146,20 @@ app.use((err, req, res, next) => {
 async function connectDatabase() {
   try {
     console.log('📡 Connecting to MongoDB...');
-    
+
     await mongoose.connect(MONGODB_URI, {
       // Mongoose 8+ không cần các options cũ
     });
-    
+
     console.log('✅ MongoDB connected successfully');
-    
+
     // Log database info
     const db = mongoose.connection.db;
     const stats = await db.stats();
     console.log(`📊 Database: ${db.databaseName}`);
     console.log(`   Collections: ${stats.collections}`);
     console.log(`   Documents: ${stats.objects}`);
-    
+
     return true;
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
@@ -169,7 +171,7 @@ async function connectDatabase() {
 
 async function gracefulShutdown(signal) {
   console.log(`\n📴 Received ${signal}. Shutting down gracefully...`);
-  
+
   try {
     await mongoose.connection.close();
     console.log('✅ MongoDB connection closed');
@@ -190,15 +192,15 @@ async function startServer() {
   console.log('='.repeat(50));
   console.log(`📅 Started at: ${new Date().toISOString()}`);
   console.log(`🌍 Environment: ${NODE_ENV}`);
-  
+
   // Connect to database
   const dbConnected = await connectDatabase();
-  
+
   if (!dbConnected) {
     console.error('❌ Failed to connect to database. Exiting...');
     process.exit(1);
   }
-  
+
   // Warm up tag normalizer cache
   try {
     console.log('🔥 Warming up tag normalizer cache...');
@@ -206,7 +208,7 @@ async function startServer() {
   } catch (error) {
     console.warn('⚠️  Could not warm up cache:', error.message);
   }
-  
+
   // Start listening
   app.listen(PORT, () => {
     console.log('='.repeat(50));

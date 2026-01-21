@@ -3,6 +3,7 @@ import SearchBar from './components/SearchBar';
 import NovelCard, { NovelCardSkeleton } from './components/NovelCard';
 import SourceNovelCard from './components/SourceNovelCard';
 import BrowsePage from './components/BrowsePage';
+import RankingPage from './components/RankingPage';
 import NovelModal from './components/NovelModal';
 import { getRecommendations, getStats } from './services/api';
 
@@ -83,6 +84,31 @@ export default function App() {
           onShowNotice={() => setShowNoticePopup(true)}
         />
         <BrowsePage />
+        <NoticePopup
+          notice={notice}
+          isOpen={showNoticePopup}
+          onClose={() => setShowNoticePopup(false)}
+        />
+      </>
+    );
+  }
+
+  if (currentPage === 'ranking') {
+    return (
+      <>
+        <Navigation
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          stats={stats}
+          notice={notice}
+          onShowNotice={() => setShowNoticePopup(true)}
+        />
+        <RankingPage onNovelClick={handleCardClick} />
+        <NovelModal
+          novel={selectedNovel}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
         <NoticePopup
           notice={notice}
           isOpen={showNoticePopup}
@@ -333,6 +359,18 @@ function Navigation({ currentPage, setCurrentPage, stats, notice, onShowNotice }
                 </span>
               )}
             </button>
+            <button
+              onClick={() => setCurrentPage('ranking')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${currentPage === 'ranking'
+                ? 'bg-stone-800 text-stone-100'
+                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              BXH
+            </button>
           </div>
 
           {/* Info button */}
@@ -352,7 +390,7 @@ function Navigation({ currentPage, setCurrentPage, stats, notice, onShowNotice }
           </div>
         </div>
       </div>
-    </nav>
+    </nav >
   );
 }
 

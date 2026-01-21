@@ -26,7 +26,7 @@ const NovelSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         // Validate URL format cơ bản
         return /^https?:\/\/.+/.test(v);
       },
@@ -114,6 +114,35 @@ const NovelSchema = new mongoose.Schema({
     max: 5
   },
 
+  // Điểm đánh giá trung bình (tính từ Review)
+  ratingAverage: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5,
+    index: true
+  },
+
+  // Số lượng review
+  reviewCount: {
+    type: Number,
+    default: 0
+  },
+
+  // Số lượt vote (Ranking)
+  voteCount: {
+    type: Number,
+    default: 0,
+    index: true
+  },
+
+  // Điểm xếp hạng tuần
+  weeklyScore: {
+    type: Number,
+    default: 0,
+    index: true
+  },
+
   // Thời gian crawl
   createdAt: {
     type: Date,
@@ -128,7 +157,7 @@ const NovelSchema = new mongoose.Schema({
 }, {
   // Tự động thêm createdAt và updatedAt
   timestamps: true,
-  
+
   // Collection name trong MongoDB
   collection: 'novels'
 });
@@ -143,9 +172,9 @@ NovelSchema.index({ standardTags: 1, createdAt: -1 });
  * Text Index cho full-text search
  * - Tìm kiếm theo title và description
  */
-NovelSchema.index({ 
-  title: 'text', 
-  description: 'text' 
+NovelSchema.index({
+  title: 'text',
+  description: 'text'
 }, {
   weights: {
     title: 10,      // Title có trọng số cao hơn
@@ -159,19 +188,19 @@ NovelSchema.index({
  * - Tự động cập nhật updatedAt
  * - Detect source từ originalLink
  */
-NovelSchema.pre('save', function(next) {
+NovelSchema.pre('save', function (next) {
   this.updatedAt = new Date();
-  
+
   // Auto-detect source từ URL
   if (this.originalLink) {
     if (this.originalLink.includes('wattpad.com')) {
       this.source = 'wattpad';
-    } else if (this.originalLink.includes('wordpress.com') || 
-               this.originalLink.includes('.wp.')) {
+    } else if (this.originalLink.includes('wordpress.com') ||
+      this.originalLink.includes('.wp.')) {
       this.source = 'wordpress';
     }
   }
-  
+
   next();
 });
 
@@ -181,7 +210,7 @@ NovelSchema.pre('save', function(next) {
  * @param {number} limit - Số lượng kết quả tối đa
  * @returns {Promise<Array>} - Mảng truyện tương tự
  */
-NovelSchema.statics.findSimilar = async function(novelId, limit = 10) {
+NovelSchema.statics.findSimilar = async function (novelId, limit = 10) {
   const novel = await this.findById(novelId);
   if (!novel || !novel.standardTags.length) {
     return [];
@@ -191,9 +220,9 @@ NovelSchema.statics.findSimilar = async function(novelId, limit = 10) {
   return this.aggregate([
     // Loại trừ chính truyện đang xét
     { $match: { _id: { $ne: novel._id } } },
-    
+
     // Tính số tag trùng khớp
-    { 
+    {
       $addFields: {
         matchingTags: {
           $size: {
@@ -202,18 +231,18 @@ NovelSchema.statics.findSimilar = async function(novelId, limit = 10) {
         }
       }
     },
-    
+
     // Chỉ lấy truyện có ít nhất 1 tag trùng
     { $match: { matchingTags: { $gt: 0 } } },
-    
+
     // Sắp xếp theo số tag trùng (giảm dần)
     { $sort: { matchingTags: -1, readCount: -1 } },
-    
+
     // Giới hạn kết quả
     { $limit: limit },
-    
+
     // Chỉ lấy các field cần thiết
-    { 
+    {
       $project: {
         title: 1,
         author: 1,
@@ -231,11 +260,11 @@ NovelSchema.statics.findSimilar = async function(novelId, limit = 10) {
  * @param {Array<string>} tags - Mảng standardTags cần tìm
  * @param {Object} options - { page, limit, matchAll }
  */
-NovelSchema.statics.findByTags = async function(tags, options = {}) {
+NovelSchema.statics.findByTags = async function (tags, options = {}) {
   const { page = 1, limit = 20, matchAll = false } = options;
   const skip = (page - 1) * limit;
 
-  const query = matchAll 
+  const query = matchAll
     ? { standardTags: { $all: tags } }  // Phải có TẤT CẢ tags
     : { standardTags: { $in: tags } };  // Có ÍT NHẤT 1 tag
 
@@ -262,7 +291,7 @@ NovelSchema.statics.findByTags = async function(tags, options = {}) {
 /**
  * Instance method: Kiểm tra truyện đã tồn tại chưa
  */
-NovelSchema.statics.existsByLink = async function(originalLink) {
+NovelSchema.statics.existsByLink = async function (originalLink) {
   const count = await this.countDocuments({ originalLink });
   return count > 0;
 };

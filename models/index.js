@@ -9,11 +9,15 @@ const Novel = require('./Novel');
 const TagDictionary = require('./TagDictionary');
 const TagReport = require('./TagReport');
 const SiteNotice = require('./SiteNotice');
+const Review = require('./Review');
+const Vote = require('./Vote');
 
 module.exports = {
   Novel,
   TagDictionary,
   TagReport,
-  SiteNotice
+  SiteNotice,
+  Review,
+  Vote
 };
 

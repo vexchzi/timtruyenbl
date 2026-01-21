@@ -4,7 +4,8 @@
  * NOTE: Routes using this controller MUST be protected by requireAdminToken middleware.
  */
 
-const { Novel, TagDictionary } = require('../models');
+
+const { Novel, TagDictionary, Review, Vote } = require('../models');
 const { clearCache, normalizeString, normalizeTagsWithDescription, extractTagsFromDescription } = require('../utils/tagNormalizer');
 
 // Import crawlers
@@ -1243,7 +1244,9 @@ module.exports = {
   analyzeTagsText,
   bulkAddTagToNovels,
   exportNovelsCsv,
-  bulkUpdateNovels
+  bulkUpdateNovels,
+  getReviews,
+  deleteReview
 };
 
 /**
@@ -1416,6 +1419,103 @@ async function analyzeTagsText(req, res) {
 
   } catch (error) {
     console.error('[Admin] analyzeTagsText error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+}
+
+/**
+ * GET /api/admin/reviews
+ * Get all reviews with pagination and search
+ */
+async function getReviews(req, res) {
+  try {
+    const { page = 1, limit = 20, search } = req.query;
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit)));
+
+    const query = {};
+    if (search) {
+      query.$or = [
+        { content: { $regex: search, $options: 'i' } },
+        { nickname: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const total = await Review.countDocuments(query);
+    const reviews = await Review.find(query)
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .populate('novel', 'title originalLink')
+      .lean();
+
+    // Map nickname -> userName for frontend compatibility if needed
+    const mappedReviews = reviews.map(r => ({
+      ...r,
+      userName: r.nickname // Map for frontend
+    }));
+
+    return res.json({
+      success: true,
+      data: {
+        reviews: mappedReviews,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          pages: Math.ceil(total / limitNum)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] getReviews error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+}
+
+/**
+ * DELETE /api/admin/reviews/:id
+ * Delete a review and update novel stats
+ */
+async function deleteReview(req, res) {
+  try {
+    const { id } = req.params;
+    const review = await Review.findById(id);
+
+    if (!review) {
+      return res.status(404).json({ success: false, error: 'Review not found' });
+    }
+
+    // Capture novelId before deleting to update stats
+    const novelId = review.novel;
+
+    await Review.findByIdAndDelete(id);
+
+    // Recalculate stats for the novel
+    if (novelId) {
+      const stats = await Review.aggregate([
+        { $match: { novel: novelId, isVisible: true } },
+        {
+          $group: {
+            _id: '$novel',
+            avgRating: { $avg: '$rating' },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
+      const ratingAverage = stats.length > 0 ? parseFloat(stats[0].avgRating.toFixed(1)) : 0;
+      const reviewCount = stats.length > 0 ? stats[0].count : 0;
+
+      await Novel.findByIdAndUpdate(novelId, {
+        ratingAverage,
+        reviewCount
+      });
+    }
+
+    return res.json({ success: true, message: 'Deleted review successfully' });
+  } catch (error) {
+    console.error('[Admin] deleteReview error:', error);
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
