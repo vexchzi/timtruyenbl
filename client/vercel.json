@@ -1,6 +1,16 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://timtruyenbl.onrender.com/api/:path*" },
-    { "source": "/login", "destination": "https://timtruyenbl.onrender.com/login" }
+    {
+      "source": "/api/:path*",
+      "destination": "https://timtruyenbl.onrender.com/api/:path*"
+    },
+    {
+      "source": "/login",
+      "destination": "https://timtruyenbl.onrender.com/login"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
