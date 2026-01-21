@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import NovelCard, { NovelCardGrid, NovelCardSkeleton, NovelCardGridSkeleton } from './NovelCard';
 import TagFilter from './TagFilter';
-import NovelModal from './NovelModal';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
-export default function BrowsePage() {
+export default function BrowsePage({ onNovelClick }) {
   const [novels, setNovels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,8 +17,6 @@ export default function BrowsePage() {
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedNovel, setSelectedNovel] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [tagDescriptions, setTagDescriptions] = useState({});
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -69,7 +66,7 @@ export default function BrowsePage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('excludedTags');
-    if (saved) try { setExcludedTags(JSON.parse(saved)); } catch (e) {}
+    if (saved) try { setExcludedTags(JSON.parse(saved)); } catch (e) { }
     const savedView = localStorage.getItem('viewMode');
     if (savedView) setViewMode(savedView);
   }, []);
@@ -134,11 +131,10 @@ export default function BrowsePage() {
 
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`lg:hidden p-1.5 border rounded-lg transition-colors ${
-                  selectedTags.length > 0 || excludedTags.length > 0
+                className={`lg:hidden p-1.5 border rounded-lg transition-colors ${selectedTags.length > 0 || excludedTags.length > 0
                     ? 'bg-stone-700 border-stone-600 text-stone-200'
                     : 'bg-stone-800 border-stone-700 text-stone-400'
-                }`}
+                  }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -218,11 +214,11 @@ export default function BrowsePage() {
                 Array.from({ length: 18 }).map((_, i) => <SkeletonComponent key={i} />)
               ) : filteredNovels.length > 0 ? (
                 filteredNovels.map((novel, idx) => (
-                  <CardComponent 
-                    key={novel._id || idx} 
-                    novel={novel} 
-                    onTagClick={(tag) => { if (!selectedTags.includes(tag)) { setSelectedTags([...selectedTags, tag]); setPage(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}}
-                    onCardClick={(n) => { setSelectedNovel(n); setIsModalOpen(true); }}
+                  <CardComponent
+                    key={novel._id || idx}
+                    novel={novel}
+                    onTagClick={(tag) => { if (!selectedTags.includes(tag)) { setSelectedTags([...selectedTags, tag]); setPage(1); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
+                    onCardClick={onNovelClick}
                   />
                 ))
               ) : (
@@ -247,13 +243,6 @@ export default function BrowsePage() {
           </main>
         </div>
       </div>
-
-      <NovelModal
-        novel={selectedNovel}
-        isOpen={isModalOpen}
-        onClose={() => { setIsModalOpen(false); setSelectedNovel(null); }}
-        onTagClick={(tag) => { if (!selectedTags.includes(tag)) { setSelectedTags([...selectedTags, tag]); setPage(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}}
-      />
     </div>
   );
 }

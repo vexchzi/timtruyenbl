@@ -12,7 +12,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 
 // Import routes
-const { novelRoutes, adminRoutes, reviewRoutes, voteRoutes } = require('./routes');
+const { novelRoutes, adminRoutes, reviewRoutes, voteRoutes, updateRoutes } = require('./routes');
 
 // Import utilities
 const { warmUpCache } = require('./utils/tagNormalizer');
@@ -72,6 +72,7 @@ app.use('/api', novelRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/votes', voteRoutes);
+app.use('/api/updates', updateRoutes);
 
 // API info endpoint
 app.get('/api', (req, res) => {

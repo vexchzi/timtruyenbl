@@ -1421,6 +1421,7 @@
       <button class="tab-btn" onclick="switchTab('reviews')">Quản lý Bình luận</button>
       <button class="tab-btn" onclick="switchTab('notice')">Thông báo Web</button>
       <button class="tab-btn" onclick="switchTab('tools')">Công cụ</button>
+      <button class="tab-btn" onclick="switchTab('updates')">Nhật ký Cập nhật</button>
     </div>
 
     <!-- Tab: Novels -->
@@ -1628,6 +1629,47 @@
           </div>
           <div class="tag-list" id="tagDictionaryList">
             <div style="padding:20px;color:#888;text-align:center">Đang tải...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Updates -->
+    <div class="tab-content" id="tab-updates">
+      <div class="tag-manager">
+        <div class="tag-create-section">
+          <h3>Thêm Cập nhật Mới</h3>
+          <div class="tag-form-group">
+            <label>Phiên bản (VD: 1.0.2)</label>
+            <input type="text" id="newUpdateVersion">
+          </div>
+          <div class="tag-form-group">
+            <label>Ngày</label>
+            <input type="date" id="newUpdateDate">
+          </div>
+          <div class="tag-form-group">
+            <label>Loại</label>
+            <select id="newUpdateType">
+              <option value="improvement">Cải thiện</option>
+              <option value="feature">Tính năng mới</option>
+              <option value="fix">Sửa lỗi</option>
+            </select>
+          </div>
+          <div class="tag-form-group">
+            <label>Nội dung (Mỗi dòng một ý)</label>
+            <textarea id="newUpdateContent" placeholder="- Thêm tính năng X&#10;- Sửa lỗi Y"
+              style="height:150px; background:#121218; border:1px solid #333; color:#eee; padding:10px"></textarea>
+          </div>
+          <button class="btn-create-tag" onclick="createUpdateLog()"
+            style="background:#40a090; color:white; padding:10px; border:none; border-radius:5px; cursor:pointer">Đăng
+            Cập nhật</button>
+        </div>
+
+        <div class="tag-list-section">
+          <h3>Lịch sử Cập nhật</h3>
+          <div class="tag-list" id="updateLogList" style="max-height:600px; overflow-y:auto">
+            <!-- Updates loaded here -->
+            <div style="padding:20px; text-align:center; color:#888">Đang tải...</div>
           </div>
         </div>
       </div>
@@ -4463,6 +4505,7 @@
       if (tabName === 'notice') loadNotice();
       if (tabName === 'tools') loadExportOptions();
       if (tabName === 'reviews') loadReviews();
+      if (tabName === 'updates') loadUpdates();
 
       localStorage.setItem('activeTab', tabName);
     }
@@ -4559,6 +4602,93 @@
         }
       } catch (err) {
         showToast('Lỗi kết nối server', true);
+      }
+    }
+
+    // ============== UPDATES MANAGEMENT ==============
+    async function loadUpdates() {
+      try {
+        const data = await api('/updates');
+        if (data.success) {
+          renderUpdates(data.data);
+        }
+      } catch (err) {
+        showToast('Lỗi tải updates: ' + err.message, true);
+      }
+    }
+
+    function renderUpdates(logs) {
+      const container = document.getElementById('updateLogList');
+      if (!logs || logs.length === 0) {
+        container.innerHTML = '<div style="color:#909098;font-style:italic">Chưa có bản cập nhật nào.</div>';
+        return;
+      }
+
+      container.innerHTML = logs.map(log => `
+        <div class="tag-list-item">
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+              <span style="font-weight:bold;color:#60c0b0">${log.version}</span>
+              <span class="report-status-badge" style="background:#404050">${log.type}</span>
+              <span style="color:#909098;font-size:0.8rem">${new Date(log.date).toLocaleDateString('vi-VN')}</span>
+            </div>
+            <ul style="margin:0;padding-left:20px;color:#ccc;font-size:0.9rem">
+              ${log.content.map(point => `<li>${point}</li>`).join('')}
+            </ul>
+          </div>
+          <div class="tag-actions">
+            <button class="btn-delete-tag" onclick="deleteUpdateLog('${log._id}')">Xóa</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function createUpdateLog() {
+      const version = document.getElementById('newUpdateVersion').value.trim();
+      const contentStr = document.getElementById('newUpdateContent').value.trim();
+      const type = document.getElementById('newUpdateType').value;
+      const date = document.getElementById('newUpdateDate').value;
+
+      if (!version || !contentStr) {
+        showToast('Vui lòng nhập phiên bản và nội dung!', true);
+        return;
+      }
+
+      const content = contentStr.split('\n').filter(line => line.trim().length > 0);
+
+      try {
+        const data = await api('/updates', {
+          method: 'POST',
+          body: JSON.stringify({ version, content, type, date: date || new Date() })
+        });
+
+        if (data.success) {
+          showToast('Đã thêm bản cập nhật mới!');
+          // Clear form
+          document.getElementById('newUpdateVersion').value = '';
+          document.getElementById('newUpdateContent').value = '';
+          document.getElementById('newUpdateDate').value = '';
+          loadUpdates();
+        } else {
+          showToast(data.message || 'Lỗi', true);
+        }
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, true);
+      }
+    }
+
+    async function deleteUpdateLog(id) {
+      if (!confirm('Bạn có chắc muốn xóa bản cập nhật này?')) return;
+      try {
+        const data = await api(`/updates/${id}`, { method: 'DELETE' });
+        if (data.success) {
+          showToast('Đã xóa!');
+          loadUpdates();
+        } else {
+          showToast(data.message || 'Lỗi', true);
+        }
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, true);
       }
     }
 
