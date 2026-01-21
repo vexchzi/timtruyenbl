@@ -12,6 +12,10 @@ let API_BASE_URL = '/api';
 // Allow override via Environment Variable (e.g. for Vercel/Netlify separate deployment)
 if (import.meta.env.VITE_API_URL) {
   API_BASE_URL = import.meta.env.VITE_API_URL;
+} else if (typeof window !== 'undefined' && window.location.hostname.includes('vercel')) {
+  // 3. Fallback: Auto-detect Vercel deployment and point to Render Backend
+  // (Convenience for user to avoid setting env vars manually)
+  API_BASE_URL = 'https://timtruyenbl.onrender.com/api';
 }
 
 /**
