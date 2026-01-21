@@ -29,11 +29,14 @@ function requireAdminToken(req, res, next) {
 
   if (provided && provided === expected) return next();
 
-  return res.status(401).json({
-    success: false,
-    error: 'Unauthorized',
-    message: 'Missing or invalid admin token.'
-  });
+  // Chống Brute-force: Delay ngẫu nhiên từ 500-1500ms khi sai token
+  setTimeout(() => {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized',
+      message: 'Missing or invalid admin token.'
+    });
+  }, Math.floor(Math.random() * 1000) + 500);
 }
 
 module.exports = { requireAdminToken };

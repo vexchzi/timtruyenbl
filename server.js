@@ -11,34 +11,51 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
-// Import routes
-const { novelRoutes, adminRoutes, reviewRoutes, voteRoutes, updateRoutes } = require('./routes');
+// Import security middlewares
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const hpp = require('hpp');
+const rateLimit = require('express-rate-limit');
 
-// Import utilities
-const { warmUpCache } = require('./utils/tagNormalizer');
-
-// ============== CONFIG ==============
-
-const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/novel_recommender';
-const NODE_ENV = process.env.NODE_ENV || 'development';
-
-// ============== EXPRESS APP ==============
-
-const app = express();
+// ...
 
 // ============== MIDDLEWARE ==============
 
+// Security Headers
+app.use(helmet({
+  contentSecurityPolicy: false, // Tắt CSP để tránh chặn script inline của Admin Panel (nếu cần thì bật lại sau)
+  crossOriginEmbedderPolicy: false
+}));
+
+// Sanitize Data (Chống NoSQL Injection)
+app.use(mongoSanitize());
+
+// Prevent Parameter Pollution
+app.use(hpp());
+
+// Rate Limiting (Chống DDoS / Spam API)
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 phút
+  max: 200, // Tối đa 200 request mỗi IP
+  message: {
+    success: false,
+    error: 'Too many requests',
+    message: 'Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau 10 phút.'
+  }
+});
+app.use('/api', limiter);
+
 // CORS - Cho phép frontend gọi API
 app.use(cors({
-  origin: true, // Cho phép tất cả origins trong production
+  // ... (giữ nguyên config CORS cũ hoặc siết chặt hơn nếu muốn)
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Token'],
   credentials: true
 }));
 
 // Parse JSON body
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '10kb' })); // Giới hạn body size để chống tràn bộ nhớ
 
 // Parse URL-encoded body
 app.use(express.urlencoded({ extended: true }));
